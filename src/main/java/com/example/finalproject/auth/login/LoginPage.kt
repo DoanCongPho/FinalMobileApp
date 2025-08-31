@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoginPage() {
+fun LoginPage(
+    onNavigateToRegister: () -> Unit
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -75,7 +77,7 @@ fun LoginPage() {
                 verticalArrangement = Arrangement.Bottom
             ) {
                 Button(
-                    onClick = { /* TODO: Navigate to Register */ },
+                    onClick = {onNavigateToRegister()},
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                     modifier = Modifier
