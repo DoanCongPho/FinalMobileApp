@@ -2,7 +2,8 @@
 package com.example.finalproject.auth.register.model
 
 data class RegistrationData(
-    val studentId: String = "",
+    val username: String = "",
+    val password: String = "",
     val fullName: String = "",
     val studyField: String = "",
     val gender: Gender? = null,

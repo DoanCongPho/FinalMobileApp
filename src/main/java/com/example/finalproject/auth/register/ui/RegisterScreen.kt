@@ -1,8 +1,5 @@
-// com.example.finalproject.auth.register.ui/RegisterScreen.kt
 package com.example.finalproject.auth.register.ui
-
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +18,8 @@ import androidx.compose.ui.graphics.StrokeCap
 
 
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
+import com.example.finalproject.core.widget.ModeCard
+import com.example.finalproject.core.widget.RadioButtonWithLabel
 
 @Composable
 fun RegisterScreen(
@@ -52,7 +51,6 @@ fun RegisterScreen(
                 .padding(horizontal = 20.dp, vertical = 12.dp)
 
         ) {
-
             LinearProgressIndicator(
                 progress = { (ui.currentStep + 1) / ui.totalSteps.toFloat() },
                 modifier = Modifier
@@ -69,12 +67,18 @@ fun RegisterScreen(
 
             AnimatedContent(targetState = ui.currentStep) { step ->
                 when (step) {
-                    0 -> StudentIdStep(ui.data.studentId, onChange = vm::updateStudentId)
-                    1 -> FullNameStep(ui.data.fullName, onChange = vm::updateFullName)
-                    2 -> StudyFieldStep(ui.data.studyField, onChange = vm::updateStudyField)
-                    3 -> GenderStep(selected = ui.data.gender, onSelected = vm::updateGender)
-                    4 -> ModeSelectStep(selected = ui.data.mode, onSelect = vm::updateMode)
-                    5 -> PrivacyStep(accepted = ui.data.acceptedPrivacy, onAccept = vm::setAcceptedPrivacy)
+
+                    0 -> FullNameStep(ui.data.fullName, onChange = vm::updateFullName)
+                    1 -> StudyFieldStep(ui.data.studyField, onChange = vm::updateStudyField)
+                    2 -> GenderStep(selected = ui.data.gender, onSelected = vm::updateGender)
+                    3 -> ModeSelectStep(selected = ui.data.mode, onSelect = vm::updateMode)
+                    4 -> PrivacyStep(
+                        accepted = ui.data.acceptedPrivacy,
+                        onAccept = vm::setAcceptedPrivacy
+                    )
+
+                    5 -> UsernameStep(ui.data.username, onChange = vm::updateUsername)
+                    6 -> PasswordStep(ui.data.password, onChange = vm::updatePassword)
                 }
             }
 
@@ -99,13 +103,12 @@ fun RegisterScreen(
             ) {
                 if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(if (ui.currentStep == ui.totalSteps - 1) "I agree" else "Next")
+                Text(if (ui.currentStep == ui.totalSteps - 1) "Finish" else "Next")
             }
             Spacer(Modifier.height(12.dp))
         }
     }
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,27 +128,16 @@ fun SmallTopAppBar(
     )
 }
 
-
-private fun stepTitle(step: Int) = when (step) {
-    0 -> "What's your Student ID?"
-    1 -> "What's your full name?"
-    2 -> "What are you currently studying?"
-    3 -> "How do you identify?"
-    4 -> "Choose a mode to get started"
-    5 -> "Privacy Notice"
-    else -> ""
-}
-
 @Composable
-fun StudentIdStep(value: String, onChange: (String) -> Unit) {
+fun UsernameStep(value: String, onChange: (String) -> Unit) {
     Column {
         Text(
-            "What's your Student ID?",
+            "What's your Username?",
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            "We protect our community by making sure everyone on StudyWith is a student.",
+            "Next time you will use this username to login",
             style = MaterialTheme.typography.bodySmall
         )
         Spacer(Modifier.height(20.dp))
@@ -153,7 +145,7 @@ fun StudentIdStep(value: String, onChange: (String) -> Unit) {
         TextField(
             value = value,
             onValueChange = onChange,
-            placeholder = { Text("Enter your student ID") },
+            placeholder = { Text("Enter your username") },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -164,7 +156,7 @@ fun StudentIdStep(value: String, onChange: (String) -> Unit) {
                 unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
                 disabledIndicatorColor = Color.Transparent,
                 errorIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color.White,         // nền trắng
+                focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black,
@@ -173,79 +165,171 @@ fun StudentIdStep(value: String, onChange: (String) -> Unit) {
                 unfocusedPlaceholderColor = Color.Gray
             )
         )
-
-
-
         Spacer(Modifier.height(8.dp))
     }
 }
+@Composable
+fun PasswordStep(value: String, onChange: (String) -> Unit) {
+    Column {
+        Text(
+            "What's your password?",
+            style = MaterialTheme.typography.headlineSmall
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            "Next time you will use this password to login",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(Modifier.height(20.dp))
 
-
+        TextField(
+            value = value,
+            onValueChange = onChange,
+            placeholder = { Text("Enter your password") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+            shape = RoundedCornerShape(8.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                cursorColor = Color.Black,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            )
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+}
 @Composable
 fun FullNameStep(value: String, onChange: (String) -> Unit) {
     Column {
-        Text("What's your full name?",   style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(value = value, onValueChange = onChange, placeholder = { Text("Enter your full name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        Text("What's your full name?", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Add the name you are called in school.",
+            style = MaterialTheme.typography.bodySmall
+        )
+        Spacer(Modifier.height(20.dp))
+        TextField(
+            value = value,
+            onValueChange = onChange,
+            placeholder = { Text("Enter your full name") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+            shape = RoundedCornerShape(8.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                cursorColor = Color.Black,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            )
+        )
     }
 }
-
 @Composable
 fun StudyFieldStep(value: String, onChange: (String) -> Unit) {
     Column {
-        Text("What are you currently studying?",   style = MaterialTheme.typography.headlineSmall)
+        Text("What are you currently studying?", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(value = value, onValueChange = onChange, placeholder = { Text("e.g. Business administration") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        TextField(
+            value = value,
+            onValueChange = onChange,
+            placeholder = { Text("e.g. Business administration") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+            shape = RoundedCornerShape(8.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                cursorColor = Color.Black,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
+            )
+        )
     }
 }
-
 @Composable
-fun GenderStep(selected: com.example.finalproject.auth.register.model.Gender?, onSelected: (com.example.finalproject.auth.register.model.Gender) -> Unit) {
+fun GenderStep(
+    selected: com.example.finalproject.auth.register.model.Gender?,
+    onSelected: (com.example.finalproject.auth.register.model.Gender) -> Unit
+) {
     Column {
-        Text("How do you identify?",   style = MaterialTheme.typography.headlineSmall)
+        Text("How do you identify?", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(12.dp))
-        RadioButtonWithLabel("Girl", com.example.finalproject.auth.register.model.Gender.FEMALE, selected, onSelected)
+        RadioButtonWithLabel(
+            "Boy",
+            com.example.finalproject.auth.register.model.Gender.MALE,
+            selected,
+            onSelected
+        )
         Spacer(Modifier.height(8.dp))
-        RadioButtonWithLabel("Boy", com.example.finalproject.auth.register.model.Gender.MALE, selected, onSelected)
+        RadioButtonWithLabel(
+            "Girl",
+            com.example.finalproject.auth.register.model.Gender.FEMALE,
+            selected,
+            onSelected
+        )
+
     }
 }
-
 @Composable
-fun RadioButtonWithLabel(label: String, value: com.example.finalproject.auth.register.model.Gender, selected: com.example.finalproject.auth.register.model.Gender?, onSelect: (com.example.finalproject.auth.register.model.Gender) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onSelect(value) }
-        .padding(8.dp)) {
-        RadioButton(selected = selected == value, onClick = { onSelect(value) })
-        Spacer(Modifier.width(8.dp))
-        Text(label)
-    }
-}
-
-@Composable
-fun ModeSelectStep(selected: com.example.finalproject.auth.register.model.Mode?, onSelect: (com.example.finalproject.auth.register.model.Mode) -> Unit) {
+fun ModeSelectStep(
+    selected: com.example.finalproject.auth.register.model.Mode?,
+    onSelect: (com.example.finalproject.auth.register.model.Mode) -> Unit
+) {
     Column {
-        Text("Choose a mode to get started",  style = MaterialTheme.typography.headlineSmall)
+        Text("Choose a mode to get started", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(12.dp))
-        ModeCard("Starter", "I need help to excel in my studies", com.example.finalproject.auth.register.model.Mode.STARTER, selected, onSelect)
+        Text("StudyMate’s for making all kinds of connections! To help you excel in your studies and also learn to create value.", style = MaterialTheme.typography.bodySmall)
+        Spacer(Modifier.height(12.dp))
+        ModeCard(
+            "Starter",
+            "I need help to excel in my studies",
+            com.example.finalproject.auth.register.model.Mode.STARTER,
+            selected,
+            onSelect
+        )
         Spacer(Modifier.height(8.dp))
-        ModeCard("Immediate", "Description", com.example.finalproject.auth.register.model.Mode.IMMEDIATE, selected, onSelect)
+        ModeCard(
+            "Immediate",
+            "Description",
+            com.example.finalproject.auth.register.model.Mode.IMMEDIATE,
+            selected,
+            onSelect
+        )
         Spacer(Modifier.height(8.dp))
-        ModeCard("Pro", "Description", com.example.finalproject.auth.register.model.Mode.PRO, selected, onSelect)
-    }
-}
-
-@Composable
-fun ModeCard(title: String, desc: String, value: com.example.finalproject.auth.register.model.Mode, selected: com.example.finalproject.auth.register.model.Mode?, onSelect: (com.example.finalproject.auth.register.model.Mode) -> Unit) {
-    Card(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { onSelect(value) }
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(6.dp))
-            Text(desc, style = MaterialTheme.typography.bodySmall)
-        }
+        ModeCard(
+            "Pro",
+            "Description",
+            com.example.finalproject.auth.register.model.Mode.PRO,
+            selected,
+            onSelect
+        )
     }
 }
 
@@ -254,10 +338,14 @@ fun PrivacyStep(accepted: Boolean, onAccept: (Boolean) -> Unit) {
     Column {
         Text("Privacy Notice", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(12.dp))
-        Text("I agree to the terms and conditions...") // paste your privacy text
+        Text("I agree to the terms and conditions of that are provided to me and I choose to follow them, all procedures and no insult and back stab of any kind.") // paste your privacy text
         Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = accepted, onCheckedChange = onAccept)
+            Checkbox(checked = accepted, onCheckedChange = onAccept,  colors = CheckboxDefaults.colors(
+                checkedColor = Color.White,     // when checked (yellow)
+                uncheckedColor = Color.Black,          // when unchecked
+                checkmarkColor = Color.Black          // color of the ✔ inside
+            ))
             Spacer(Modifier.width(8.dp))
             Text("I agree to the terms")
         }

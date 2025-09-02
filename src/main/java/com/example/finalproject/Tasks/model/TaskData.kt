@@ -1,8 +1,8 @@
 package com.example.finalproject.Tasks.model
+
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
-
 
 
 enum class RepeatFrequency {
@@ -25,15 +25,15 @@ sealed class MonthlyPattern {
 }
 
         data class CalendarTask(
-    val id: String,
-    val title: String,
-    val details: String? = null,
-    val isAllDay: Boolean = false,
-    val date: LocalDate,
-    val time: LocalTime? = null,                           // Only used if not all-day
-    val repeatFrequency: RepeatFrequency = RepeatFrequency.NONE,
-    val monthlyPattern: MonthlyPattern? = null,             // Only if frequency is MONTHLY
-    val repeatEnd: RepeatEnd = RepeatEnd.Never,
-    val tag: String? = null
+            val id: String,
+            val title: String,
+            val details: String? = null,
+            val isAllDay: Boolean = false,
+            val date: LocalDate,
+            val time: LocalTime? = null,                           // Only used if not all-day
+            val repeatFrequency: RepeatFrequency = RepeatFrequency.NONE,
+            val monthlyPattern: MonthlyPattern? = null,             // Only if frequency is MONTHLY
+            val repeatEnd: RepeatEnd = RepeatEnd.Never,
+            val tag: String? = null
 )
 
