@@ -13,17 +13,18 @@ import kotlinx.coroutines.launch
 data class RegisterUiState(
     val data: RegistrationData = RegistrationData(),
     val currentStep: Int = 0,
-    val totalSteps: Int = 6,
+    val totalSteps: Int = 7,
     val isLoading: Boolean = false,
     val error: String? = null
 )
+
 
 class RegisterViewModel(private val repo: RegisterRepository) : ViewModel() {
     private val _ui = MutableStateFlow(RegisterUiState())
     val ui: StateFlow<RegisterUiState> = _ui
 
     // updates
-    fun updateStudentId(v: String) = _ui.update { it.copy(data = it.data.copy(studentId = v)) }
+    fun updateUsername(v: String) = _ui.update { it.copy(data = it.data.copy(username = v)) }
     fun updateFullName(v: String) = _ui.update { it.copy(data = it.data.copy(fullName = v)) }
     fun updateStudyField(v: String) = _ui.update { it.copy(data = it.data.copy(studyField = v)) }
     fun updateGender(g: com.example.finalproject.auth.register.model.Gender) =
@@ -31,17 +32,18 @@ class RegisterViewModel(private val repo: RegisterRepository) : ViewModel() {
     fun updateMode(m: com.example.finalproject.auth.register.model.Mode) =
         _ui.update { it.copy(data = it.data.copy(mode = m)) }
     fun setAcceptedPrivacy(v: Boolean) = _ui.update { it.copy(data = it.data.copy(acceptedPrivacy = v)) }
-
+    fun updatePassword(v: String) = _ui.update {  it.copy(data = it.data.copy(password = v))}
     // navigation
     fun canGoNext(): Boolean {
         val s = _ui.value
         return when (s.currentStep) {
-            0 -> s.data.studentId.isNotBlank()
-            1 -> s.data.fullName.trim().length >= 2
-            2 -> s.data.studyField.isNotBlank()
-            3 -> s.data.gender != null
-            4 -> s.data.mode != null
-            5 -> s.data.acceptedPrivacy
+            0 -> s.data.fullName.trim().length >= 2
+            1 -> s.data.studyField.isNotBlank()
+            2 -> s.data.gender != null
+            3 -> s.data.mode != null
+            4 -> s.data.acceptedPrivacy
+            5 -> s.data.username.isNotBlank()
+            6 -> s.data.password.isNotBlank()
             else -> false
         }
     }

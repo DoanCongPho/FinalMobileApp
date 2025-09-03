@@ -1,5 +1,6 @@
 package com.example.finalproject
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,8 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun LoginPage(
-    onNavigateToRegister: () -> Unit
+fun AuthenPage(
+    onNavigateToRegister: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -42,7 +44,7 @@ fun LoginPage(
                     .offset(x = 100.dp, y = (-10).dp),
                 contentScale = ContentScale.Fit,
 
-            )
+                )
 
             // Welcome text (chiếm khoảng 20%)
             Column(
@@ -90,12 +92,13 @@ fun LoginPage(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedButton(
-                    onClick = { /* TODO: Navigate to Login */ },
+                    onClick = {onNavigateToLogin()},
                     shape = RoundedCornerShape(50),
+                    border = BorderStroke(1.dp, Color.Black) ,
                     modifier = Modifier
                         .width(327.dp)
                         .height(55.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black, )
                 ) {
                     Text("Log In")
                 }
