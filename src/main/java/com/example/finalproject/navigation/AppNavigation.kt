@@ -4,7 +4,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.finalproject.LoginPage
+import com.example.finalproject.AuthenPage
+import com.example.finalproject.auth.login.data.FakeLoginApi
+import com.example.finalproject.auth.login.data.LoginRepository
+import com.example.finalproject.auth.login.data.LoginViewModelFactory
+import com.example.finalproject.auth.login.ui.LoginScreen
+import com.example.finalproject.auth.login.viewmodel.LoginViewModel
 import com.example.finalproject.auth.register.data.FakeRegisterApi
 import com.example.finalproject.auth.register.data.RegisterRepository
 import com.example.finalproject.auth.register.data.RegisterViewModelFactory
@@ -13,17 +18,21 @@ import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 
 
 sealed class Screen(val route: String) {
-    object Login : Screen("login")
+    object Authen: Screen("authen")
     object Register : Screen("register")
+    object Login: Screen("login")
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
-        composable(Screen.Login.route) {
-            LoginPage(
+    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+        composable(Screen.Authen.route) {
+            AuthenPage (
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route)
                 }
             )
         }
@@ -33,9 +42,19 @@ fun AppNavigation(navController: NavHostController) {
             )
             RegisterScreen(
                 vm = vm,
-                onFinish = { navController.popBackStack() },
+                onFinish = { navController.navigate(Screen.Authen.route)},
                 onBackPressed = { navController.popBackStack() }
             )
+        }
+        composable(Screen.Login.route){
+            val vm: LoginViewModel = viewModel(
+                factory = LoginViewModelFactory(LoginRepository(FakeLoginApi))
+            )
+            LoginScreen(
+                vm = vm,
+                onBack = { navController.popBackStack() },
+                onLoginSuccess = { navController.popBackStack() },
+                onNavigateToRegister = { navController.navigate(Screen.Register.route) })
         }
     }
 }

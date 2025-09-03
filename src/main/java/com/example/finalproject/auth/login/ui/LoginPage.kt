@@ -1,105 +1,158 @@
-package com.example.finalproject
+package com.example.finalproject.auth.login.ui
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.finalproject.auth.login.viewmodel.LoginViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginPage(
+fun LoginScreen(
+    vm: LoginViewModel,
+    onBack: () -> Unit,
+    onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    val ui by vm.ui.collectAsState()
+
     Scaffold(
-        modifier = Modifier.fillMaxSize()
-    ) { innerPadding ->
+        containerColor = Color(0xFFFFCC33),
+        topBar = {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFFFFCC33),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                )
+            )
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFFFCC33)) // Yellow background
-                .padding(innerPadding)
+                .padding(padding)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top illustration (chiếm khoảng 40% chiều cao)
-            Image(
-                painter = painterResource(id = R.drawable.study_mate_header),
-                contentDescription = "Header Illustration",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(432.dp)
-                    .offset(x = 100.dp, y = (-10).dp),
-                contentScale = ContentScale.Fit,
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.headlineMedium,
 
             )
 
-            // Welcome text (chiếm khoảng 20%)
-            Column(
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Username",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
+
+            TextField(
+                value = ui.username,
+                onValueChange = vm::updateUsername,
+                placeholder = { Text("Enter your username") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                ),
                 modifier = Modifier
-                    .weight(0.2f)
                     .fillMaxWidth()
-                    .offset(x = 24.dp),
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center
+                    .shadow(4.dp, RoundedCornerShape(8.dp))
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Password",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Start
+            )
+            TextField(
+                value = ui.password,
+                onValueChange = vm::updatePassword,
+                placeholder = { Text("Enter your password") },
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)),
+                visualTransformation = PasswordVisualTransformation()
+            )
+            Spacer(Modifier.height(20.dp))
+
+            ui.error?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+                Spacer(Modifier.height(8.dp))
+            }
+
+            Button(
+                onClick = { vm.login(onLoginSuccess, {}) },
+                enabled = vm.canLogin() && !ui.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
             ) {
+                if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Sign In")
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(), // chiếm full chiều ngang
+                horizontalArrangement = Arrangement.Start // căn sát lề trái
+            ) {
+                Text("Don't have an account? ")
                 Text(
-                    text = "Welcome to",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Text(
-                    text = "StudyMate",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    "Sign Up",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold, // ✅ in đậm
+                    modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
 
-            Column(
-                modifier = Modifier
-                    .weight(0.2f)
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .offset(y=-35.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                Button(
-                    onClick = {onNavigateToRegister()},
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                    modifier = Modifier
-                        .width(327.dp)
-                        .height(55.dp),
-                ) {
-                    Text("Create an account", color = Color.White)
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = { /* TODO: Navigate to Login */ },
-                    shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .width(327.dp)
-                        .height(55.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
-                ) {
-                    Text("Log In")
-                }
-            }
         }
     }
 }
