@@ -1,4 +1,5 @@
 package com.example.finalproject.auth.register.ui
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,7 +46,8 @@ fun MonthScreen(
                 onPrevMonth = { selectedMonth = selectedMonth.minusMonths(1) },
                 onNextMonth = { selectedMonth = selectedMonth.plusMonths(1) },
                 onSearchClick = { /* TODO */ },
-                onSendClick = { /* TODO */ }
+                onSendClick = { /* TODO */ },
+                onFullViewClick = { navController.navigate("calendar")}
             )
         }
     ) { innerPadding ->
@@ -155,7 +157,9 @@ fun CustomTopAppBar(
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onSearchClick: () -> Unit,
-    onSendClick: () -> Unit
+    onSendClick: () -> Unit,
+    onFullViewClick: () -> Unit
+
 ) {
     TopAppBar(
         title = {
@@ -163,12 +167,16 @@ fun CustomTopAppBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Icon bên trái (grid)
-                Icon(
-                    imageVector = Icons.Default.GridView, // cần import 1 icon gần giống
-                    contentDescription = "View",
-                    tint = Color(0xFF1565C0) // xanh
-                )
+                IconButton(onClick = {
+                    onFullViewClick()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.GridView,
+                        contentDescription = "View",
+                        tint = Color(0xFF1565C0)
+                    )
+                }
+
 
                 Text(
                     text = "${
