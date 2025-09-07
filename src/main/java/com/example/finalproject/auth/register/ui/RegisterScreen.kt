@@ -58,9 +58,7 @@ fun RegisterScreen(
                     .height(4.dp),
                 color = Color.Black,
                 trackColor = Color.White,
-                strokeCap = StrokeCap.Round,
-                gapSize = (-15).dp,
-                drawStopIndicator = {}
+                strokeCap = StrokeCap.Round
             )
 
             Spacer(Modifier.height(24.dp))
