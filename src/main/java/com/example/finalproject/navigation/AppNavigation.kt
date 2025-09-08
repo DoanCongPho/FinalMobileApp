@@ -50,8 +50,7 @@ fun AppNavigation(navController: NavHostController) {
     val calendarViewModel: CalendarViewModel1 = viewModel(
         factory = CalendarViewModel1Factory()
     )
-    val ChatListViewModel: ChatListViewModel = viewModel()
-    NavHost(navController = navController, startDestination = Screen.Chat.route) {
+    NavHost(navController = navController, startDestination = Screen.Month.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = {

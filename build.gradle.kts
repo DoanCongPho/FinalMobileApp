@@ -54,6 +54,8 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0") // Retrofit core
     implementation("com.squareup.retrofit2:converter-gson:2.11.0") // Gson converter
     implementation("androidx.navigation:navigation-compose:2.8.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

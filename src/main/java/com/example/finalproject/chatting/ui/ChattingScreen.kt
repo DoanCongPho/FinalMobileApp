@@ -2,6 +2,7 @@ package com.example.finalproject.chatting.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.finalproject.chatting.model.Chat
 import com.example.finalproject.chatting.viewmodel.ChatListViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -48,15 +52,22 @@ import com.example.finalproject.chatting.viewmodel.MessageViewModelFactory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import com.example.finalproject.chatting.data.UserRepository
 import com.example.finalproject.chatting.model.Message
+import com.example.finalproject.chatting.model.User
+import com.example.finalproject.chatting.viewmodel.ChatListViewModelFactory
+import com.example.finalproject.chatting.viewmodel.UserViewModel
+import com.example.finalproject.chatting.viewmodel.UserViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
-fun ChatItem(chat: Chat, onClick: () -> Unit) {
+fun ChatItem(chat: Chat,viewModel: ChatListViewModel, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -65,13 +76,17 @@ fun ChatItem(chat: Chat, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-//        Box(
-//            modifier = Modifier
-//                .size(48.dp)
-//                .background(Color.Gray, CircleShape)
-//        )
-//
-//        Spacer(modifier = Modifier.width(12.dp))
+        val avatarUrl = viewModel.getUrlAvatar(chat)
+        AsyncImage(
+            model = avatarUrl ?: "https://via.placeholder.com/150", // fallback
+            contentDescription = "Avatar",
+            modifier = Modifier
+                .size(48.dp)
+                .background(Color.Gray, CircleShape)
+                .clip(CircleShape)
+        )
+
+        Spacer(modifier = Modifier.width(12.dp))
 
         Column(
             modifier = Modifier.weight(1f)
@@ -80,7 +95,7 @@ fun ChatItem(chat: Chat, onClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = chat.name, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                Text(text = viewModel.getDisplayName(chat), style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
                 Text(text = chat.lastMessageTime, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
 
@@ -104,7 +119,7 @@ fun ChatListScreen(viewModel: ChatListViewModel, onChatClick: (Chat) -> Unit) {
 
     LazyColumn {
         items(chats.value) { chat ->
-            ChatItem(chat = chat) {
+            ChatItem(chat = chat, viewModel = viewModel) {
                 onChatClick(chat)
             }
             Divider()
@@ -112,11 +127,14 @@ fun ChatListScreen(viewModel: ChatListViewModel, onChatClick: (Chat) -> Unit) {
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainChatList(navController: NavController) {
-    val viewModel: ChatListViewModel = remember { ChatListViewModel() }
+    val currentUserId = "congpho123"
+
+    // Lấy ra user hiện tại
+    val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory(currentUserId))
+    val userState by userViewModel.currentUser.collectAsState(initial = null)
 
     Scaffold(
         topBar = {
@@ -145,20 +163,33 @@ fun MainChatList(navController: NavController) {
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            ChatListScreen(viewModel) { chat ->
-               navController.navigate("chatScreen/${chat.chatId}")
+            userState?.let { user ->
+                val chatListViewModel: ChatListViewModel = viewModel(
+                    factory = ChatListViewModelFactory(currentUserId)
+                )
+
+                ChatListScreen(chatListViewModel) { chat ->
+                    navController.navigate("chatScreen/${chat.chatId}")
+                }
+            } ?: run {
+                Text(
+                    text = "Loading chats...",
+                    modifier = Modifier.padding(16.dp),
+                    color = Color.Gray
+                )
             }
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     chatId: String,
-    messageViewModel: MessageViewModel = viewModel(factory = MessageViewModelFactory(chatId)),
     navController: NavController
 ) {
+    val messageViewModel: MessageViewModel = viewModel(factory = MessageViewModelFactory(chatId))
     val messages by messageViewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }
 
@@ -210,6 +241,7 @@ fun ChatScreen(
 private fun Nothing?.popBackStack() {
     TODO("Not yet implemented")
 }
+
 
 @Composable
 fun ChatMessageItem(message: Message) {
