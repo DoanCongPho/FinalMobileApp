@@ -8,7 +8,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
 import com.example.finalproject.AuthenPage
 import com.example.finalproject.auth.login.data.FakeLoginApi
 import com.example.finalproject.auth.login.data.LoginRepository
@@ -22,18 +21,14 @@ import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.calendar.data.CalendarRepository
-import com.example.finalproject.calendar.data.CalendarRepository1
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
 import com.example.finalproject.calendar.ui.CalendarScreen
-import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
-import com.example.finalproject.calendar.ui.DayScreen
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1Factory
 import java.time.LocalDate
-
 import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.AddTaskScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
@@ -109,11 +104,13 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
         composable(Screen.DailySchedule.route) { backStackEntry ->
-            val date = backStackEntry.arguments?.getString("date") ?: ""
-            val taskViewModel: TaskViewModel = viewModel()
+            val dateString = backStackEntry.arguments?.getString("date") ?: ""
+//          val taskViewModel: TaskViewModel = viewModel()
+            val date = LocalDate.parse(dateString)
+            val tasks = calendarViewModel.tasks.filter { it.date == date}
             DailyScheduleScreen(
-                date = date,
-                tasks = taskViewModel.tasks,
+                date = dateString,
+                tasks = tasks,
                 onTaskClick = { taskId ->
                     navController.navigate("task_detail/$taskId")
                 },
@@ -203,24 +200,6 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.Month.route) {
             MonthScreen(viewModel = calendarViewModel, navController = navController)
-        }
-
-        composable(
-            route = "day/{date}",
-            arguments = listOf(navArgument("date") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val dateString = backStackEntry.arguments?.getString("date") ?: ""
-            val date = LocalDate.parse(dateString)
-
-            DayScreen(
-                date = date,
-                viewModel = calendarViewModel,
-                onDateChange = { newDate ->
-                    navController.navigate("day/$newDate") {
-                        popUpTo("day/{date}") { inclusive = true }
-                    }
-                }
-            )
         }
 
 

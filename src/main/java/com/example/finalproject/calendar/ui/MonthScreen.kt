@@ -104,7 +104,8 @@ fun MonthScreen(
                         date,
                         tasks.filter { it.date == date },
                         onDayClick = { clickedDate ->
-                            navController.navigate("day/${clickedDate}")
+//                           navController.navigate("day/${clickedDate}")
+                            navController.navigate("daily_schedule/${clickedDate}")
                         }
                     )
                 }
