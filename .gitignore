@@ -11,3 +11,4 @@ app/build/
 
 # Ignore local environment files
 /local.properties
+.gradle/
