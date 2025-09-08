@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
@@ -17,15 +18,21 @@ import com.example.finalproject.auth.login.viewmodel.LoginViewModel
 import com.example.finalproject.auth.register.data.FakeRegisterApi
 import com.example.finalproject.auth.register.data.RegisterRepository
 import com.example.finalproject.auth.register.data.RegisterViewModelFactory
+import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.calendar.data.CalendarRepository
+import com.example.finalproject.calendar.data.CalendarRepository1
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
 import com.example.finalproject.calendar.ui.CalendarScreen
 import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
+import com.example.finalproject.calendar.ui.DayScreen
+import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
+import com.example.finalproject.calendar.viewmodel.CalendarViewModel1Factory
+import java.time.LocalDate
 
 import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.AddTaskScreen
@@ -43,12 +50,17 @@ sealed class Screen(val route: String) {
     object AddTask : Screen("add_task/{date}")
     object TaskDetail : Screen("task_detail/{taskId}")
     object CustomRecurrence : Screen("custom_recurrence/{frequency}")
+    object Month: Screen("month")
+    object Day: Screen("day")
 }
 
         
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    val calendarViewModel: CalendarViewModel1 = viewModel(
+        factory = CalendarViewModel1Factory()
+    )
+    NavHost(navController = navController, startDestination = Screen.Month.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = {
@@ -189,5 +201,28 @@ fun AppNavigation(navController: NavHostController) {
                 }
             )
         }
+        composable(Screen.Month.route) {
+            MonthScreen(viewModel = calendarViewModel, navController = navController)
+        }
+
+        composable(
+            route = "day/{date}",
+            arguments = listOf(navArgument("date") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val dateString = backStackEntry.arguments?.getString("date") ?: ""
+            val date = LocalDate.parse(dateString)
+
+            DayScreen(
+                date = date,
+                viewModel = calendarViewModel,
+                onDateChange = { newDate ->
+                    navController.navigate("day/$newDate") {
+                        popUpTo("day/{date}") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+
     }
 }

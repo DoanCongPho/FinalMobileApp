@@ -2,11 +2,14 @@ package com.example.finalproject.calendar.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.finalproject.calendar.data.CalendarRepository
+import com.example.finalproject.calendar.data.CalendarRepository1
 import com.example.finalproject.calendar.model.CalendarEvent
 import com.example.finalproject.calendar.model.EventType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import kotlin.collections.List
 import kotlin.Boolean
@@ -62,3 +65,34 @@ class CalendarViewModelFactory(private val repo: CalendarRepository) : ViewModel
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+
+
+
+class CalendarViewModel1(): ViewModel() {
+    val tasks = CalendarRepository1.getTasks() // tasks là mutableStateListOf
+
+    init {
+        viewModelScope.launch {
+            CalendarRepository1.loadTasksFromApi()
+        }
+    }
+
+    fun loadTasks() {
+        viewModelScope.launch {
+            CalendarRepository1.loadTasksFromApi()
+        }
+    }
+}
+
+class CalendarViewModel1Factory : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CalendarViewModel1::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return CalendarViewModel1() as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+
