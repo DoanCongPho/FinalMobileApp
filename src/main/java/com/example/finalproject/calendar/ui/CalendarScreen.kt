@@ -20,11 +20,13 @@ import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
+import androidx.navigation.NavController
+import androidx.compose.foundation.clickable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
+    navController: NavController,
     onNavigateToStudy: () -> Unit,
     onNavigateToChat: () -> Unit,
     onNavigateToAccount: () -> Unit
@@ -94,32 +96,54 @@ fun CalendarScreen(
 
             // Today's events section
             item {
+                val todayDateString = LocalDateTime.now().toLocalDate().toString()
                 Text(
                     text = "Today",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            navController.navigate("daily_schedule/$todayDateString")
+                        }
                 )
             }
 
             items(uiState.events.filter { it.time.dayOfYear == LocalDateTime.now().dayOfYear }) { event ->
-                EventItem(event)
+                EventItem(
+                    event = event,
+                    onClick = {
+                        val eventDateString = event.time.toLocalDate().toString()
+                        navController.navigate("daily_schedule/$eventDateString")
+                    }
+                )
             }
 
             // Tomorrow's events section
             item {
+                val tomorrowDateString = LocalDateTime.now().plusDays(1).toLocalDate().toString()
                 Text(
                     text = "Tomorrow",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    modifier = Modifier
+                        .padding(top = 16.dp, bottom = 8.dp)
+                        .clickable {
+                            navController.navigate("daily_schedule/$tomorrowDateString")
+                        }
                 )
             }
 
             items(uiState.events.filter { it.time.dayOfYear == LocalDateTime.now().plusDays(1).dayOfYear }) { event ->
-                EventItem(event)
+                EventItem(
+                    event = event,
+                    onClick = {
+                        val eventDateString = event.time.toLocalDate().toString()
+                        navController.navigate("daily_schedule/$eventDateString")
+                    }
+                )
             }
 
             // Vacations section
@@ -141,15 +165,16 @@ fun CalendarScreen(
 }
 
 @Composable
-fun EventItem(event: CalendarEvent) {
+fun EventItem(event: CalendarEvent, onClick: (() -> Unit)? = null) {
     val dateFormatter = DateTimeFormatter.ofPattern("dd-MM")
     
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFEFEBF2)  // Lighter grayish-lavender color
+        color = Color(0xFFEFEBF2)
     ) {
         Row(
             modifier = Modifier

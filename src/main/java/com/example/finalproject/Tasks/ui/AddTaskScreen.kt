@@ -1,0 +1,311 @@
+package com.example.finalproject.Tasks.ui
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.finalproject.Tasks.model.CalendarTask
+import com.example.finalproject.Tasks.model.RepeatFrequency
+import com.example.finalproject.Tasks.ui.getDrawableId
+
+@Composable
+fun AddTaskScreen(
+    date: String,
+    onCancel: () -> Unit,
+    onSave: (CalendarTask) -> Unit,
+    onCustomRecurrence: (RepeatFrequency) -> Unit
+) {
+    // Removed old local custom recurrence states; navigation persists selection
+    val now = remember { java.time.LocalDate.now() }
+    val nowTime = remember { java.time.LocalTime.now().withSecond(0).withNano(0) }
+    // Use the date string passed in
+    val selectedDate = remember(date) {
+        try {
+            java.time.LocalDate.parse(date)
+        } catch (e: Exception) {
+            now
+        }
+    }
+    var taskDate by remember { mutableStateOf(selectedDate) }
+    var time by remember { mutableStateOf(nowTime) }
+    var repeat by remember { mutableStateOf(RepeatFrequency.NONE) }
+    var showRepeatDialog by remember { mutableStateOf(false) }
+    val repeatOptions = listOf(
+        RepeatFrequency.NONE to "Does not repeat",
+        RepeatFrequency.DAILY to "Every day",
+        RepeatFrequency.WEEKLY to "Every week",
+        RepeatFrequency.MONTHLY to "Every month",
+        RepeatFrequency.YEARLY to "Every year",
+        null to "Custom"
+    )
+    var details by remember { mutableStateOf("") }
+    var showCancelConfirm by remember { mutableStateOf(false) }
+    var showWarning by remember { mutableStateOf(false) }
+    var title by remember { mutableStateOf("") }
+    var tag by remember { mutableStateOf("") }
+    var isAllDay by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF232326))) {
+        // Navigation to CustomRecurrenceScreen is now handled by navigation, not local state
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp, start = 16.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Cancel",
+                color = Color(0xFF1976D2),
+                fontSize = 18.sp,
+                modifier = Modifier.clickable { showCancelConfirm = true }
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "Save",
+                color = Color(0xFF1976D2),
+                fontSize = 18.sp,
+                modifier = Modifier.clickable {
+                    if (title.isBlank() || tag.isBlank()) {
+                        showWarning = true
+                    } else {
+                        onSave(
+                            CalendarTask(
+                                id = kotlin.random.Random.nextInt().toString(),
+                                title = title,
+                                details = details.takeIf { it.isNotBlank() },
+                                isAllDay = isAllDay,
+                                date = taskDate,
+                                time = if (isAllDay) null else time,
+                                repeatFrequency = repeat,
+                                tag = tag
+                            )
+                        )
+                    }
+                }
+            )
+        }
+        // ...existing UI for inputs, toggles, dialogs...
+        // Title input, details, toggles, dialogs, etc. remain as is
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 64.dp, start = 24.dp, end = 24.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            TextField(
+                value = title,
+                onValueChange = { title = it },
+                placeholder = { Text("Add title", fontSize = 28.sp, color = Color(0xFF757575)) },
+                textStyle = TextStyle(fontSize = 28.sp, color = Color.Black, fontWeight = FontWeight.Bold),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().background(Color.White)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            // Details
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getDrawableId("detail_icon")),
+                    contentDescription = "Details icon",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = details,
+                    onValueChange = { details = it },
+                    placeholder = { Text("Add details", color = Color(0xFF757575)) },
+                    textStyle = TextStyle(color = Color.Black),
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth().background(Color.White)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            // All-day toggle
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getDrawableId("clock_icon")),
+                    contentDescription = "Clock icon",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("All-day", color = Color.White, fontSize = 16.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                if (isAllDay) {
+                    Image(
+                        painter = painterResource(id = getDrawableId("yes_button")),
+                        contentDescription = "Yes",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { isAllDay = false }
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = getDrawableId("no_button")),
+                        contentDescription = "No",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { isAllDay = true }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Date and time
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val formatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, d MMM", java.util.Locale.getDefault())
+                Text(
+                    text = taskDate.format(formatter),
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+                if (!isAllDay) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    var timeInput by remember { mutableStateOf("%02d:%02d".format(time.hour, time.minute)) }
+                    TextField(
+                        value = timeInput,
+                        onValueChange = {
+                            timeInput = it
+                            val regex = Regex("^(\\d{1,2}):(\\d{1,2})$")
+                            val match = regex.matchEntire(it)
+                            if (match != null) {
+                                val h = match.groupValues[1].toIntOrNull()
+                                val m = match.groupValues[2].toIntOrNull()
+                                if (h != null && m != null && h in 0..23 && m in 0..59) {
+                                    // Round minute to nearest 5, 10, or 15
+                                    val nearest = listOf(5, 10, 15).minByOrNull { kotlin.math.abs(m - it) } ?: 5
+                                    val rounded = when {
+                                        m % 15 == 0 -> m
+                                        m % 10 == 0 -> m
+                                        m % 5 == 0 -> m
+                                        else -> nearest
+                                    }
+                                    time = java.time.LocalTime.of(h, rounded)
+                                }
+                            }
+                        },
+                        placeholder = { Text("HH:mm", color = Color(0xFF757575)) },
+                        textStyle = TextStyle(color = Color.Black),
+                        singleLine = true,
+                        modifier = Modifier.width(100.dp).background(Color.White)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Repeat
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getDrawableId("repeat_icon")),
+                    contentDescription = "Repeat icon",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Box {
+                    Text(
+                        text = repeatOptions.firstOrNull { it.first == repeat }?.second ?: "Custom",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .background(Color(0xFF333333), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .clickable { showRepeatDialog = true }
+                    )
+                    if (showRepeatDialog) {
+                        Surface(
+                            modifier = Modifier
+                                .width(180.dp)
+                                .background(Color(0xFF232326)),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF232326)
+                        ) {
+                            Column {
+                                repeatOptions.forEach { (freq, label) ->
+                                    Text(
+                                        text = label,
+                                        color = if (freq == repeat) Color(0xFF90CAF9) else Color.White,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                if (freq != null) {
+                                                    repeat = freq
+                                                    showRepeatDialog = false
+                                                } else {
+                                                    // Custom clicked
+                                                    showRepeatDialog = false
+                                                    if (repeat == RepeatFrequency.NONE) {
+                                                        // Ignore custom if no base frequency chosen yet
+                                                    } else {
+                                                        onCustomRecurrence(repeat)
+                                                    }
+                                                }
+                                            }
+                                            .padding(8.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            // Tag
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getDrawableId("tag_icon")),
+                    contentDescription = "Tag icon",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                TextField(
+                    value = tag,
+                    onValueChange = { tag = it },
+                    placeholder = { Text("Tag", color = Color(0xFF757575)) },
+                    textStyle = TextStyle(color = Color.Black),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().background(Color.White)
+                )
+            }
+        }
+        // Warning dialog
+        if (showWarning) {
+            AlertDialog(
+                onDismissRequest = { showWarning = false },
+                title = { Text("Missing Info") },
+                text = { Text("Please enter both a title and a tag.") },
+                confirmButton = {
+                    Button(onClick = { showWarning = false }) { Text("OK") }
+                }
+            )
+        }
+        // Cancel confirmation dialog
+        if (showCancelConfirm) {
+            AlertDialog(
+                onDismissRequest = { showCancelConfirm = false },
+                title = { Text("Cancel Task Creation") },
+                text = { Text("Are you sure you want to cancel? Your changes will be lost.") },
+                confirmButton = {
+                    Button(onClick = {
+                        showCancelConfirm = false
+                        onCancel()
+                    }) { Text("Yes") }
+                },
+                dismissButton = {
+                    Button(onClick = { showCancelConfirm = false }) { Text("No") }
+                }
+            )
+        }
+    }
+}
