@@ -63,17 +63,7 @@ fun StudyScreen(
                 modifier = Modifier.padding(top = 16.dp)
             )
 
-            // Small grid icon on the right (as in the UI)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                FilledTonalIconButton(onClick = onOpenGrid) {
-                    Icon(Icons.Default.Apps, contentDescription = "Grid")
-                }
-            }
-
-            Spacer(Modifier.height(25.dp))
+            Spacer(Modifier.height(60.dp))
 
             BigActionButton(
                 label = "Review",
@@ -82,7 +72,7 @@ fun StudyScreen(
             )
             BigActionButton(
                 label = "Pomodoro",
-                onClick = { /* navController.navigate("pomodoro") */ },
+                onClick = { navController.navigate("pomodoro") },
                 modifier = Modifier.padding(top = 24.dp)
             )
             BigActionButton(
