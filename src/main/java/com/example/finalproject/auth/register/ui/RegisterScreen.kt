@@ -1,351 +1,376 @@
-package com.example.finalproject.auth.register.ui
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+    package com.example.finalproject.auth.register.ui
+    import androidx.compose.animation.AnimatedContent
+    import androidx.compose.foundation.layout.*
+    import androidx.compose.foundation.shape.RoundedCornerShape
+    import androidx.compose.material3.*
+    import androidx.compose.runtime.*
+    import androidx.compose.ui.Alignment
+    import androidx.compose.ui.Modifier
+    import androidx.compose.ui.unit.dp
+    import androidx.compose.material.icons.Icons
+    import androidx.compose.material.icons.filled.ArrowBack
+    import androidx.compose.material3.LinearProgressIndicator
+    import androidx.compose.material3.MaterialTheme
+    import androidx.compose.ui.draw.shadow
+    import androidx.compose.ui.graphics.Color
+    import androidx.compose.ui.graphics.StrokeCap
 
 
-import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
-import com.example.finalproject.core.widget.ModeCard
-import com.example.finalproject.core.widget.RadioButtonWithLabel
+    import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
+    import com.example.finalproject.core.widget.ModeCard
+    import com.example.finalproject.core.widget.RadioButtonWithLabel
 
-@Composable
-fun RegisterScreen(
-    vm: RegisterViewModel,
-    onFinish: () -> Unit,
-    onBackPressed: () -> Unit
+    @Composable
+    fun RegisterScreen(
+        vm: RegisterViewModel,
+        onFinish: () -> Unit,
+        onBackPressed: () -> Unit
 
-) {
+    ) {
 
-    val ui by vm.ui.collectAsState()
-    Scaffold(
-        containerColor = Color(0xFFFFCC33),
-        topBar = {
-            SmallTopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (ui.currentStep == 0) onBackPressed() else vm.prev()
-                    }) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
-                }
+        val ui by vm.ui.collectAsState()
+        Scaffold(
+            containerColor = Color(0xFFFFCC33),
+            topBar = {
+                SmallTopAppBar(
+                    title = {},
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            if (ui.currentStep == 0) onBackPressed() else vm.prev()
+                        }) { Icon(Icons.Default.ArrowBack, contentDescription = "Back") }
+                    }
 
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-
-        ) {
-            LinearProgressIndicator(
-                progress = { (ui.currentStep + 1) / ui.totalSteps.toFloat() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
-                color = Color.Black,
-                trackColor = Color.White,
-                strokeCap = StrokeCap.Round
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            AnimatedContent(targetState = ui.currentStep) { step ->
-                when (step) {
-
-                    0 -> FullNameStep(ui.data.fullName, onChange = vm::updateFullName)
-                    1 -> StudyFieldStep(ui.data.studyField, onChange = vm::updateStudyField)
-                    2 -> GenderStep(selected = ui.data.gender, onSelected = vm::updateGender)
-                    3 -> ModeSelectStep(selected = ui.data.mode, onSelect = vm::updateMode)
-                    4 -> PrivacyStep(
-                        accepted = ui.data.acceptedPrivacy,
-                        onAccept = vm::setAcceptedPrivacy
-                    )
-
-                    5 -> UsernameStep(ui.data.username, onChange = vm::updateUsername)
-                    6 -> PasswordStep(ui.data.password, onChange = vm::updatePassword)
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-
-            // Next / Finish button
-            Button(
-                onClick = {
-                    if (ui.currentStep == ui.totalSteps - 1) {
-                        vm.submit(onSuccess = onFinish, onError = { /* show snackbar */ })
-                    } else vm.next()
-                },
-                enabled = vm.canGoNext() && !ui.isLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
                 )
-            ) {
-                if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(if (ui.currentStep == ui.totalSteps - 1) "Finish" else "Next")
             }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+
+            ) {
+                LinearProgressIndicator(
+                    progress = { (ui.currentStep + 1) / ui.totalSteps.toFloat() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
+                    color = Color.Black,
+                    trackColor = Color.White,
+                    strokeCap = StrokeCap.Round
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                AnimatedContent(targetState = ui.currentStep) { step ->
+                    when (step) {
+
+                        0 -> FullNameStep(ui.data.fullName, onChange = vm::updateFullName)
+                        1 -> StudyFieldStep(ui.data.studyField, onChange = vm::updateStudyField)
+                        2 -> GenderStep(selected = ui.data.gender, onSelected = vm::updateGender)
+                        3 -> ModeSelectStep(selected = ui.data.mode, onSelect = vm::updateMode)
+                        4 -> PrivacyStep(
+                            accepted = ui.data.acceptedPrivacy,
+                            onAccept = vm::setAcceptedPrivacy
+                        )
+                        5 -> PhoneStep(ui.data.phoneNumber, onChange = vm::updatePhone)
+                        6 -> GmailStep(ui.data.gmail, onChange = vm::updateGmail)
+                        7 -> PasswordStep(ui.data.password, onChange = vm::updatePassword)
+                    }
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+
+                // Next / Finish button
+                Button(
+                    onClick = {
+                        if (ui.currentStep == ui.totalSteps - 1) {
+                            vm.submit(onSuccess = onFinish, onError = { /* show snackbar */ })
+                        } else vm.next()
+                    },
+                    enabled = vm.canGoNext() && !ui.isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                    )
+                ) {
+                    if (ui.isLoading) CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (ui.currentStep == ui.totalSteps - 1) "Finish" else "Next")
+                }
+                Spacer(Modifier.height(12.dp))
+            }
+        }
+    }
+
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun SmallTopAppBar(
+        title: @Composable () -> Unit,
+        navigationIcon: @Composable () -> Unit
+    ) {
+        TopAppBar(
+            title = title,
+            navigationIcon = navigationIcon,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color(0xFFFFCC33), // nền vàng
+                titleContentColor = Color.Black,     // chữ đen
+                navigationIconContentColor = Color.Black // icon đen
+            )
+        )
+    }
+
+    @Composable
+    fun GmailStep(value: String, onChange: (String) -> Unit) {
+        Column {
+            Text(
+                "What's your gmail address?",
+                style = MaterialTheme.typography.headlineSmall
+            )
             Spacer(Modifier.height(12.dp))
+            Text(
+                "Next time you will use this gmail to login",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(20.dp))
+
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                placeholder = { Text("Enter your gmail") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                )
+            )
+            Spacer(Modifier.height(8.dp))
         }
     }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SmallTopAppBar(
-    title: @Composable () -> Unit,
-    navigationIcon: @Composable () -> Unit
-) {
-    TopAppBar(
-        title = title,
-        navigationIcon = navigationIcon,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFFFFCC33), // nền vàng
-            titleContentColor = Color.Black,     // chữ đen
-            navigationIconContentColor = Color.Black // icon đen
-        )
-    )
-}
-
-@Composable
-fun UsernameStep(value: String, onChange: (String) -> Unit) {
-    Column {
-        Text(
-            "What's your Username?",
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Next time you will use this username to login",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(Modifier.height(20.dp))
-
-        TextField(
-            value = value,
-            onValueChange = onChange,
-            placeholder = { Text("Enter your username") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
-            shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
-                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
+    @Composable
+    fun PasswordStep(value: String, onChange: (String) -> Unit) {
+        Column {
+            Text(
+                "What's your password?",
+                style = MaterialTheme.typography.headlineSmall
             )
-        )
-        Spacer(Modifier.height(8.dp))
-    }
-}
-@Composable
-fun PasswordStep(value: String, onChange: (String) -> Unit) {
-    Column {
-        Text(
-            "What's your password?",
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Next time you will use this password to login",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(Modifier.height(20.dp))
-
-        TextField(
-            value = value,
-            onValueChange = onChange,
-            placeholder = { Text("Enter your password") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
-            shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
-                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Next time you will use this password to login",
+                style = MaterialTheme.typography.bodySmall
             )
-        )
-        Spacer(Modifier.height(8.dp))
-    }
-}
-@Composable
-fun FullNameStep(value: String, onChange: (String) -> Unit) {
-    Column {
-        Text("What's your full name?", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "Add the name you are called in school.",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(Modifier.height(20.dp))
-        TextField(
-            value = value,
-            onValueChange = onChange,
-            placeholder = { Text("Enter your full name") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
-            shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
-                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
-            )
-        )
-    }
-}
-@Composable
-fun StudyFieldStep(value: String, onChange: (String) -> Unit) {
-    Column {
-        Text("What are you currently studying?", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        TextField(
-            value = value,
-            onValueChange = onChange,
-            placeholder = { Text("e.g. Business administration") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
-            shape = RoundedCornerShape(8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
-                unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
-                disabledIndicatorColor = Color.Transparent,
-                errorIndicatorColor = Color.Transparent,
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                cursorColor = Color.Black,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
-            )
-        )
-    }
-}
-@Composable
-fun GenderStep(
-    selected: com.example.finalproject.auth.register.model.Gender?,
-    onSelected: (com.example.finalproject.auth.register.model.Gender) -> Unit
-) {
-    Column {
-        Text("How do you identify?", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        RadioButtonWithLabel(
-            "Boy",
-            com.example.finalproject.auth.register.model.Gender.MALE,
-            selected,
-            onSelected
-        )
-        Spacer(Modifier.height(8.dp))
-        RadioButtonWithLabel(
-            "Girl",
-            com.example.finalproject.auth.register.model.Gender.FEMALE,
-            selected,
-            onSelected
-        )
+            Spacer(Modifier.height(20.dp))
 
-    }
-}
-@Composable
-fun ModeSelectStep(
-    selected: com.example.finalproject.auth.register.model.Mode?,
-    onSelect: (com.example.finalproject.auth.register.model.Mode) -> Unit
-) {
-    Column {
-        Text("Choose a mode to get started", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        Text("StudyMate’s for making all kinds of connections! To help you excel in your studies and also learn to create value.", style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(12.dp))
-        ModeCard(
-            "Starter",
-            "I need help to excel in my studies",
-            com.example.finalproject.auth.register.model.Mode.STARTER,
-            selected,
-            onSelect
-        )
-        Spacer(Modifier.height(8.dp))
-        ModeCard(
-            "Immediate",
-            "Description",
-            com.example.finalproject.auth.register.model.Mode.IMMEDIATE,
-            selected,
-            onSelect
-        )
-        Spacer(Modifier.height(8.dp))
-        ModeCard(
-            "Pro",
-            "Description",
-            com.example.finalproject.auth.register.model.Mode.PRO,
-            selected,
-            onSelect
-        )
-    }
-}
-
-@Composable
-fun PrivacyStep(accepted: Boolean, onAccept: (Boolean) -> Unit) {
-    Column {
-        Text("Privacy Notice", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
-        Text("I agree to the terms and conditions of that are provided to me and I choose to follow them, all procedures and no insult and back stab of any kind.") // paste your privacy text
-        Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = accepted, onCheckedChange = onAccept,  colors = CheckboxDefaults.colors(
-                checkedColor = Color.White,     // when checked (yellow)
-                uncheckedColor = Color.Black,          // when unchecked
-                checkmarkColor = Color.Black          // color of the ✔ inside
-            ))
-            Spacer(Modifier.width(8.dp))
-            Text("I agree to the terms")
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                placeholder = { Text("Enter your password") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                )
+            )
+            Spacer(Modifier.height(8.dp))
         }
     }
-}
+    @Composable
+    fun FullNameStep(value: String, onChange: (String) -> Unit) {
+        Column {
+            Text("What's your full name?", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Add the name you are called in school.",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(Modifier.height(20.dp))
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                placeholder = { Text("Enter your full name") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                )
+            )
+        }
+    }
+    @Composable
+    fun StudyFieldStep(value: String, onChange: (String) -> Unit) {
+        Column {
+            Text("What are you currently studying?", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                placeholder = { Text("e.g. Business administration") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)), // vẫn có bo góc + shadow
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,   // bỏ underline khi focus
+                    unfocusedIndicatorColor = Color.Transparent,// bỏ underline khi unfocus
+                    disabledIndicatorColor = Color.Transparent,
+                    errorIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black,
+                    cursorColor = Color.Black,
+                    focusedPlaceholderColor = Color.Gray,
+                    unfocusedPlaceholderColor = Color.Gray
+                )
+            )
+        }
+    }
+    @Composable
+    fun GenderStep(
+        selected: com.example.finalproject.auth.register.model.Gender?,
+        onSelected: (com.example.finalproject.auth.register.model.Gender) -> Unit
+    ) {
+        Column {
+            Text("How do you identify?", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            RadioButtonWithLabel(
+                "Boy",
+                com.example.finalproject.auth.register.model.Gender.MALE,
+                selected,
+                onSelected
+            )
+            Spacer(Modifier.height(8.dp))
+            RadioButtonWithLabel(
+                "Girl",
+                com.example.finalproject.auth.register.model.Gender.FEMALE,
+                selected,
+                onSelected
+            )
+
+        }
+    }
+    @Composable
+    fun ModeSelectStep(
+        selected: com.example.finalproject.auth.register.model.Mode?,
+        onSelect: (com.example.finalproject.auth.register.model.Mode) -> Unit
+    ) {
+        Column {
+            Text("Choose a mode to get started", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            Text("StudyMate’s for making all kinds of connections! To help you excel in your studies and also learn to create value.", style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(12.dp))
+            ModeCard(
+                "Starter",
+                "I need help to excel in my studies",
+                com.example.finalproject.auth.register.model.Mode.STARTER,
+                selected,
+                onSelect
+            )
+            Spacer(Modifier.height(8.dp))
+            ModeCard(
+                "Immediate",
+                "Description",
+                com.example.finalproject.auth.register.model.Mode.IMMEDIATE,
+                selected,
+                onSelect
+            )
+            Spacer(Modifier.height(8.dp))
+            ModeCard(
+                "Pro",
+                "Description",
+                com.example.finalproject.auth.register.model.Mode.PRO,
+                selected,
+                onSelect
+            )
+        }
+    }
+
+    @Composable
+    fun PrivacyStep(accepted: Boolean, onAccept: (Boolean) -> Unit) {
+        Column {
+            Text("Privacy Notice", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            Text("I agree to the terms and conditions of that are provided to me and I choose to follow them, all procedures and no insult and back stab of any kind.") // paste your privacy text
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = accepted, onCheckedChange = onAccept,  colors = CheckboxDefaults.colors(
+                    checkedColor = Color.White,     // when checked (yellow)
+                    uncheckedColor = Color.Black,          // when unchecked
+                    checkmarkColor = Color.Black          // color of the ✔ inside
+                ))
+                Spacer(Modifier.width(8.dp))
+                Text("I agree to the terms")
+            }
+        }
+    }
+
+    @Composable
+    fun PhoneStep(value: String, onChange: (String) -> Unit) {
+        Column {
+            Text("What's your phone number?", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(12.dp))
+            TextField(
+                value = value,
+                onValueChange = onChange,
+                placeholder = { Text("Enter your phone number") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(4.dp, RoundedCornerShape(8.dp)),
+                shape = RoundedCornerShape(8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedTextColor = Color.Black
+                )
+            )
+        }
+    }
+

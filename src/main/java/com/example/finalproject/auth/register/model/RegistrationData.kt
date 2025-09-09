@@ -2,8 +2,9 @@
 package com.example.finalproject.auth.register.model
 
 data class RegistrationData(
-    val username: String = "",
+    val gmail: String = "",
     val password: String = "",
+    val phoneNumber: String = "",   // thêm
     val fullName: String = "",
     val studyField: String = "",
     val gender: Gender? = null,
@@ -13,3 +14,4 @@ data class RegistrationData(
 
 enum class Gender { FEMALE, MALE, OTHER }
 enum class Mode { STARTER, IMMEDIATE, PRO }
+
