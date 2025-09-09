@@ -21,10 +21,12 @@ import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.calendar.data.CalendarRepository
+import com.example.finalproject.calendar.data.CalendarRepository1
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
 import com.example.finalproject.calendar.ui.CalendarScreen
+import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1Factory
@@ -32,7 +34,9 @@ import java.time.LocalDate
 import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.AddTaskScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
+import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
+import com.example.finalproject.Tasks.ui.EndsScreen
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
     object Register : Screen("register")
@@ -43,8 +47,10 @@ sealed class Screen(val route: String) {
     object Account: Screen("account")
     object DailySchedule : Screen("daily_schedule/{date}")
     object AddTask : Screen("add_task/{date}")
+    object EditTask : Screen("edit_task/{taskId}")
     object TaskDetail : Screen("task_detail/{taskId}")
     object CustomRecurrence : Screen("custom_recurrence/{frequency}")
+    object Ends : Screen("ends")
     object Month: Screen("month")
     object Day: Screen("day")
 }
@@ -142,7 +148,8 @@ fun AppNavigation(navController: NavHostController) {
                     calendarViewModel.addTask(newTask)
                     navController.popBackStack()
                 },
-                onCustomRecurrence = customRecurrenceCallback
+                onCustomRecurrence = customRecurrenceCallback,
+                calendarViewModel = calendarViewModel
             )
         }
         composable(Screen.TaskDetail.route) { backStackEntry ->
@@ -152,8 +159,8 @@ fun AppNavigation(navController: NavHostController) {
                 TaskDetailScreen(
                     task = task,
                     onClose = { navController.popBackStack() },
-                    onEdit = { editedTask ->
-                        calendarViewModel.updateTask(editedTask)
+                    onEdit = { taskToEdit ->
+                        navController.navigate("edit_task/${taskToEdit.id}")
                     },
                     onDelete = { deletedTask ->
                         calendarViewModel.deleteTask(deletedTask)
@@ -165,6 +172,32 @@ fun AppNavigation(navController: NavHostController) {
                 )
             } else {
                 // fallback UI if task not found
+            }
+        }
+
+        composable(Screen.EditTask.route) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+            val task = calendarViewModel.tasks.find { it.id == taskId }
+            if (task != null) {
+                val customRecurrenceCallback = remember {
+                    { selectedFrequency: com.example.finalproject.Tasks.model.RepeatFrequency ->
+                        navController.navigate("custom_recurrence/${selectedFrequency.name}")
+                    }
+                }
+                
+                EditTaskScreen(
+                    task = task,
+                    onCancel = { navController.popBackStack() },
+                    onSave = { editedTask ->
+                        calendarViewModel.updateTask(editedTask)
+                        navController.popBackStack()
+                    },
+                    onCustomRecurrence = customRecurrenceCallback,
+                    calendarViewModel = calendarViewModel
+                )
+            } else {
+                // fallback UI if task not found
+                navController.popBackStack()
             }
         }
 
@@ -182,16 +215,38 @@ fun AppNavigation(navController: NavHostController) {
                 com.example.finalproject.Tasks.model.RepeatFrequency.NONE
             }
             
+            val draftTask = calendarViewModel.draftTask
+            val currentRepeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
+            
             CustomRecurrenceScreen(
                 initialFrequency = initialFrequency,
                 initialMonthlyPattern = null,
-                initialRepeatEnd = com.example.finalproject.Tasks.model.RepeatEnd.Never,
+                initialRepeatEnd = currentRepeatEnd,
                 onDone = { freq, monthlyPattern, repeatEnd ->
                     navController.popBackStack()
                 },
                 onBack = {
                     navController.popBackStack()
+                },
+                calendarViewModel = calendarViewModel,
+                onNavigateToEnds = {
+                    navController.navigate(Screen.Ends.route)
                 }
+            )
+        }
+        composable(Screen.Ends.route) {
+            val draftTask = calendarViewModel.draftTask
+            val currentRepeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
+            
+            EndsScreen(
+                initialRepeatEnd = currentRepeatEnd,
+                onDone = { repeatEnd ->
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
+                calendarViewModel = calendarViewModel
             )
         }
         composable(Screen.Month.route) {

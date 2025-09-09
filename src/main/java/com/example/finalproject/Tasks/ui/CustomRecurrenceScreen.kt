@@ -20,6 +20,8 @@ import com.example.finalproject.Tasks.model.MonthlyPattern
 import com.example.finalproject.Tasks.model.RepeatEnd
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.ui.getDrawableId
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 // Helper function for ordinal numbers
 fun ordinal(n: Int): String {
@@ -39,10 +41,17 @@ fun CustomRecurrenceScreen(
     initialMonthlyPattern: MonthlyPattern?,
     initialRepeatEnd: RepeatEnd,
     onDone: (RepeatFrequency, MonthlyPattern?, RepeatEnd) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    calendarViewModel: com.example.finalproject.calendar.viewmodel.CalendarViewModel1,
+    onNavigateToEnds: () -> Unit
 ) {
     // Frequency is fixed for the lifetime of this screen (cannot be changed here)
     val frequency = remember(initialFrequency) { initialFrequency }
+    // Get the current repeat end from draft task or use initial
+    val draftTask = calendarViewModel.draftTask
+    var repeatEnd by remember { 
+        mutableStateOf(draftTask?.repeatEnd ?: initialRepeatEnd) 
+    }
     // Only hold a monthly pattern if the frequency is MONTHLY
     var monthlyPattern by remember(frequency) {
         mutableStateOf(
@@ -51,10 +60,16 @@ fun CustomRecurrenceScreen(
             } else null
         )
     }
-    var repeatEnd by remember { mutableStateOf(initialRepeatEnd) }
     var showWarning by remember { mutableStateOf(false) }
     var hasChanges by remember {
         mutableStateOf(false)
+    }
+    
+    // Update repeatEnd when draft task changes (e.g., coming back from EndsScreen)
+    LaunchedEffect(draftTask?.repeatEnd) {
+        draftTask?.repeatEnd?.let { newRepeatEnd ->
+            repeatEnd = newRepeatEnd
+        }
     }
 
     Surface(modifier = Modifier.fillMaxSize().background(Color.White)) {
@@ -102,6 +117,13 @@ fun CustomRecurrenceScreen(
                     fontSize = 18.sp,
                     modifier = Modifier
                         .clickable {
+                            // Update the draft task with new repeat settings
+                            calendarViewModel.updateDraftTask { draft ->
+                                draft.copy(
+                                    repeatFrequency = frequency,
+                                    monthlyPattern = monthlyPattern
+                                )
+                            }
                             onDone(frequency, monthlyPattern, repeatEnd)
                         }
                 )
@@ -181,6 +203,7 @@ fun CustomRecurrenceScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
+                    .clickable { onNavigateToEnds() }
             ) {
                 Image(
                     painter = painterResource(id = getDrawableId("repeat_end")),
@@ -188,10 +211,14 @@ fun CustomRecurrenceScreen(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                val repeatEndText = when (repeatEnd) {
+                val currentRepeatEnd = repeatEnd // Create local variable for smart casting
+                val repeatEndText = when (currentRepeatEnd) {
                     is RepeatEnd.Never -> "Does not end"
-                    is RepeatEnd.UntilDate -> "On a date"
-                    is RepeatEnd.AfterOccurrences -> "After a number of occurrences"
+                    is RepeatEnd.UntilDate -> {
+                        val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d yyyy", Locale.getDefault())
+                        "Ends on ${currentRepeatEnd.endDate.format(formatter)}"
+                    }
+                    is RepeatEnd.AfterOccurrences -> "Ends after ${currentRepeatEnd.count} occurrences"
                 }
                 Text(
                     text = repeatEndText,
@@ -200,7 +227,7 @@ fun CustomRecurrenceScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
-                            // TODO: Handle changing repeat end type
+                            onNavigateToEnds()
                         }
                 )
                 Image(
@@ -209,7 +236,7 @@ fun CustomRecurrenceScreen(
                     modifier = Modifier
                         .size(24.dp)
                         .clickable {
-                            // TODO: Handle changing repeat end type
+                            onNavigateToEnds()
                         }
                 )
             }

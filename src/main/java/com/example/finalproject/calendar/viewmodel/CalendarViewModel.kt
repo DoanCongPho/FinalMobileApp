@@ -71,6 +71,11 @@ class CalendarViewModelFactory(private val repo: CalendarRepository) : ViewModel
 
 class CalendarViewModel1(): ViewModel() {
     val tasks = CalendarRepository1.getTasks() // tasks là mutableStateListOf
+    
+    // Draft task state for preserving data during navigation
+    private var _draftTask: com.example.finalproject.Tasks.model.CalendarTask? = null
+    val draftTask: com.example.finalproject.Tasks.model.CalendarTask?
+        get() = _draftTask
 
     init {
         viewModelScope.launch {
@@ -99,6 +104,21 @@ class CalendarViewModel1(): ViewModel() {
     fun toggleTaskState(task: com.example.finalproject.Tasks.model.CalendarTask) {
         val updatedTask = task.copy(state = if (task.state == 0) 1 else 0)
         CalendarRepository1.updateTask(updatedTask)
+    }
+    
+    // Draft task management methods
+    fun saveDraftTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
+        _draftTask = task
+    }
+    
+    fun clearDraftTask() {
+        _draftTask = null
+    }
+    
+    fun updateDraftTask(updates: (com.example.finalproject.Tasks.model.CalendarTask) -> com.example.finalproject.Tasks.model.CalendarTask) {
+        _draftTask?.let { draft ->
+            _draftTask = updates(draft)
+        }
     }
 }
 

@@ -27,29 +27,24 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Composable
-fun AddTaskScreen(
-    date: String,
+fun EditTaskScreen(
+    task: CalendarTask,
     onCancel: () -> Unit,
     onSave: (CalendarTask) -> Unit,
     onCustomRecurrence: (RepeatFrequency) -> Unit,
     calendarViewModel: com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 ) {
-    // Initialize state from draft task or defaults
-    val now = remember { java.time.LocalDate.now() }
-    val nowTime = remember { java.time.LocalTime.now().withSecond(0).withNano(0) }
-    val draftTask = calendarViewModel.draftTask
-    val selectedDate = remember(date) {
-        try {
-            java.time.LocalDate.parse(date)
-        } catch (e: Exception) {
-            now
-        }
+    // Initialize draft task with existing task data when entering edit mode
+    LaunchedEffect(task.id) {
+        calendarViewModel.saveDraftTask(task)
     }
     
-    // Initialize all state variables from draft or defaults
-    var taskDate by remember { mutableStateOf(draftTask?.date ?: selectedDate) }
-    var time by remember { mutableStateOf(draftTask?.time ?: nowTime) }
-    var repeat by remember { mutableStateOf(draftTask?.repeatFrequency ?: RepeatFrequency.NONE) }
+    val draftTask = calendarViewModel.draftTask
+    
+    // Initialize all state variables from draft task (which was initialized with the existing task)
+    var taskDate by remember { mutableStateOf(draftTask?.date ?: task.date) }
+    var time by remember { mutableStateOf(draftTask?.time ?: task.time ?: java.time.LocalTime.now().withSecond(0).withNano(0)) }
+    var repeat by remember { mutableStateOf(draftTask?.repeatFrequency ?: task.repeatFrequency) }
     var showRepeatDialog by remember { mutableStateOf(false) }
     val repeatOptions = listOf(
         RepeatFrequency.NONE to "Does not repeat",
@@ -59,36 +54,36 @@ fun AddTaskScreen(
         RepeatFrequency.YEARLY to "Every year",
         null to "Custom"
     )
-    var details by remember { mutableStateOf(draftTask?.details ?: "") }
+    var details by remember { mutableStateOf(draftTask?.details ?: task.details ?: "") }
     var showCancelConfirm by remember { mutableStateOf(false) }
     var showWarning by remember { mutableStateOf(false) }
-    var title by remember { mutableStateOf(draftTask?.title ?: "") }
-    var tag by remember { mutableStateOf(draftTask?.tag ?: "") }
-    var isAllDay by remember { mutableStateOf(draftTask?.isAllDay ?: false) }
+    var title by remember { mutableStateOf(draftTask?.title ?: task.title) }
+    var tag by remember { mutableStateOf(draftTask?.tag ?: task.tag ?: "") }
+    var isAllDay by remember { mutableStateOf(draftTask?.isAllDay ?: task.isAllDay) }
     
-    // Function to create current draft task from form state
+    // Function to create current draft task from form state, preserving the original task ID
     fun createCurrentDraft(): CalendarTask {
         return CalendarTask(
-            id = draftTask?.id ?: kotlin.random.Random.nextInt().toString(),
+            id = task.id, // Keep the original ID for editing
             title = title,
             details = details.takeIf { it.isNotBlank() },
             isAllDay = isAllDay,
             date = taskDate,
             time = if (isAllDay) null else time,
             repeatFrequency = repeat,
-            tag = tag
+            repeatEnd = draftTask?.repeatEnd ?: task.repeatEnd, // Preserve repeat end settings
+            monthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern, // Preserve monthly pattern
+            tag = tag,
+            state = task.state // Preserve the completion state
         )
     }
     
     // Save draft whenever form data changes
     LaunchedEffect(title, details, isAllDay, taskDate, time, repeat, tag) {
-        if (title.isNotBlank() || details.isNotBlank() || tag.isNotBlank()) {
-            calendarViewModel.saveDraftTask(createCurrentDraft())
-        }
+        calendarViewModel.saveDraftTask(createCurrentDraft())
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF232326))) {
-        // Navigation to CustomRecurrenceScreen is now handled by navigation, not local state
         // Header
         Row(
             modifier = Modifier
@@ -104,6 +99,13 @@ fun AddTaskScreen(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
+                text = "Edit Task", // Changed from "New Task"
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
                 text = "Save",
                 color = Color(0xFF1976D2),
                 fontSize = 18.sp,
@@ -111,24 +113,27 @@ fun AddTaskScreen(
                     if (title.isBlank() || tag.isBlank()) {
                         showWarning = true
                     } else {
-                        val finalTask = CalendarTask(
-                            id = kotlin.random.Random.nextInt().toString(),
+                        val editedTask = CalendarTask(
+                            id = task.id, // Keep original ID
                             title = title,
                             details = details.takeIf { it.isNotBlank() },
                             isAllDay = isAllDay,
                             date = taskDate,
                             time = if (isAllDay) null else time,
                             repeatFrequency = repeat,
-                            tag = tag
+                            repeatEnd = draftTask?.repeatEnd ?: task.repeatEnd,
+                            monthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern,
+                            tag = tag,
+                            state = task.state // Preserve completion state
                         )
                         calendarViewModel.clearDraftTask() // Clear draft after saving
-                        onSave(finalTask)
+                        onSave(editedTask)
                     }
                 }
             )
         }
-        // ...existing UI for inputs, toggles, dialogs...
-        // Title input, details, toggles, dialogs, etc. remain as is
+        
+        // Main content (identical to AddTaskScreen)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -242,7 +247,7 @@ fun AddTaskScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Box {
                     // Get repeat end information from draft task
-                    val currentRepeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
+                    val currentRepeatEnd = draftTask?.repeatEnd ?: task.repeatEnd
                     val repeatEndText = when (currentRepeatEnd) {
                         is RepeatEnd.Never -> "does not end"
                         is RepeatEnd.UntilDate -> {
@@ -341,7 +346,7 @@ fun AddTaskScreen(
         if (showCancelConfirm) {
             AlertDialog(
                 onDismissRequest = { showCancelConfirm = false },
-                title = { Text("Cancel Task Creation") },
+                title = { Text("Cancel Task Editing") },
                 text = { Text("Are you sure you want to cancel? Your changes will be lost.") },
                 confirmButton = {
                     Button(onClick = {
