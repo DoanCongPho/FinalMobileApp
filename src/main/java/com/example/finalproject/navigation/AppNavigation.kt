@@ -37,6 +37,9 @@ import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
+import com.example.finalproject.study.ui.StudyScreen
+import com.example.finalproject.pomodoro.ui.PomodoroScreen
+
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
     object Register : Screen("register")
@@ -53,6 +56,7 @@ sealed class Screen(val route: String) {
     object Ends : Screen("ends")
     object Month: Screen("month")
     object Day: Screen("day")
+    object Pomodoro: Screen("pomodoro")
 }
 
         
@@ -61,9 +65,9 @@ fun AppNavigation(navController: NavHostController) {
     val calendarViewModel: CalendarViewModel1 = viewModel(
         factory = CalendarViewModel1Factory()
     )
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
+    NavHost(navController = navController, startDestination = Screen.Study.route) {
         composable(Screen.Authen.route) {
-            AuthenPage (
+            AuthenPage(
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
                 },
@@ -78,18 +82,18 @@ fun AppNavigation(navController: NavHostController) {
             )
             RegisterScreen(
                 vm = vm,
-                onFinish = { navController.navigate(Screen.Authen.route)},
+                onFinish = { navController.navigate(Screen.Authen.route) },
                 onBackPressed = { navController.popBackStack() }
             )
         }
-        composable(Screen.Login.route){
+        composable(Screen.Login.route) {
             val vm: LoginViewModel = viewModel(
                 factory = LoginViewModelFactory(LoginRepository(FakeLoginApi))
             )
             LoginScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
-                onLoginSuccess = { 
+                onLoginSuccess = {
                     // Clear the back stack up to Authen and navigate to Calendar
                     navController.navigate(Screen.Calendar.route) {
                         popUpTo(Screen.Authen.route) { inclusive = true }
@@ -113,7 +117,7 @@ fun AppNavigation(navController: NavHostController) {
             val dateString = backStackEntry.arguments?.getString("date") ?: ""
 //          val taskViewModel: TaskViewModel = viewModel()
             val date = LocalDate.parse(dateString)
-            val tasks = calendarViewModel.tasks.filter { it.date == date}
+            val tasks = calendarViewModel.tasks.filter { it.date == date }
             DailyScheduleScreen(
                 date = dateString,
                 tasks = tasks,
@@ -130,7 +134,7 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.AddTask.route) { backStackEntry ->
             val date = backStackEntry.arguments?.getString("date") ?: ""
-            
+
             val customRecurrenceCallback = remember {
                 { selectedFrequency: com.example.finalproject.Tasks.model.RepeatFrequency ->
                     val route = "custom_recurrence/${selectedFrequency.name}"
@@ -140,7 +144,7 @@ fun AppNavigation(navController: NavHostController) {
                     }
                 }
             }
-            
+
             AddTaskScreen(
                 date = date,
                 onCancel = { navController.popBackStack() },
@@ -203,8 +207,8 @@ fun AppNavigation(navController: NavHostController) {
 
         composable(
             route = "custom_recurrence/{frequency}",
-            arguments = listOf(navArgument("frequency") { 
-                type = NavType.StringType 
+            arguments = listOf(navArgument("frequency") {
+                type = NavType.StringType
                 defaultValue = "NONE"
             })
         ) { backStackEntry ->
@@ -218,6 +222,7 @@ fun AppNavigation(navController: NavHostController) {
             val draftTask = calendarViewModel.draftTask
             val currentRepeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
             
+
             CustomRecurrenceScreen(
                 initialFrequency = initialFrequency,
                 initialMonthlyPattern = null,
@@ -252,7 +257,11 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Month.route) {
             MonthScreen(viewModel = calendarViewModel, navController = navController)
         }
-
-
+        composable(Screen.Study.route) {
+            StudyScreen(navController = navController)
+        }
+        composable(Screen.Pomodoro.route) {
+            PomodoroScreen(navController)
+        }
     }
 }
