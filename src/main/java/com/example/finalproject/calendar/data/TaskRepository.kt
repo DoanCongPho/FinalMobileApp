@@ -12,6 +12,21 @@ object CalendarRepository1 {
 
     fun getTasks() = tasks
 
+    fun addTask(task: CalendarTask) {
+        tasks.add(task)
+    }
+
+    fun removeTask(task: CalendarTask) {
+        tasks.remove(task)
+    }
+
+    fun updateTask(updatedTask: CalendarTask) {
+        val index = tasks.indexOfFirst { it.id == updatedTask.id }
+        if (index != -1) {
+            tasks[index] = updatedTask
+        }
+    }
+
     suspend fun loadTasksFromApi() {
         tasks.clear()
         tasks.addAll(
@@ -70,22 +85,26 @@ object CalendarRepository1 {
                 CalendarTask(
                     id = "9",
                     title = "Task 4",
-                    date = LocalDate.now()
+                    date = LocalDate.now(),
+                    time = LocalTime.of(2, 0)
                 ),
                 CalendarTask(
                     id = "10",
                     title = "Task 5",
-                    date = LocalDate.now()
+                    date = LocalDate.now(),
+                    time = LocalTime.of(3, 0)
                 ),
                 CalendarTask(
                     id = "11",
                     title = "Task 2",
-                    date = LocalDate.now().plusDays(1)
+                    date = LocalDate.now().plusDays(1),
+                    time = LocalTime.of(4, 0)
                 ),
                 CalendarTask(
                     id = "12",
                     title = "Task 3",
-                    date = LocalDate.now().plusDays(2)
+                    date = LocalDate.now().plusDays(2),
+                    time = LocalTime.of(5, 0)
                 )
             )
         )

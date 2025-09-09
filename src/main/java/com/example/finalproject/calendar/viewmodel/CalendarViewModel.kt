@@ -83,6 +83,23 @@ class CalendarViewModel1(): ViewModel() {
             CalendarRepository1.loadTasksFromApi()
         }
     }
+
+    fun addTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
+        CalendarRepository1.addTask(task)
+    }
+
+    fun deleteTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
+        CalendarRepository1.removeTask(task)
+    }
+
+    fun updateTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
+        CalendarRepository1.updateTask(task)
+    }
+
+    fun toggleTaskState(task: com.example.finalproject.Tasks.model.CalendarTask) {
+        val updatedTask = task.copy(state = if (task.state == 0) 1 else 0)
+        CalendarRepository1.updateTask(updatedTask)
+    }
 }
 
 class CalendarViewModel1Factory : ViewModelProvider.Factory {

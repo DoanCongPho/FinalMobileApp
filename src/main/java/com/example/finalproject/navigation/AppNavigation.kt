@@ -124,7 +124,6 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.AddTask.route) { backStackEntry ->
             val date = backStackEntry.arguments?.getString("date") ?: ""
-            val taskViewModel: TaskViewModel = viewModel()
             
             val customRecurrenceCallback = remember {
                 { selectedFrequency: com.example.finalproject.Tasks.model.RepeatFrequency ->
@@ -140,7 +139,7 @@ fun AppNavigation(navController: NavHostController) {
                 date = date,
                 onCancel = { navController.popBackStack() },
                 onSave = { newTask ->
-                    taskViewModel.addTask(newTask)
+                    calendarViewModel.addTask(newTask)
                     navController.popBackStack()
                 },
                 onCustomRecurrence = customRecurrenceCallback
@@ -148,23 +147,20 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable(Screen.TaskDetail.route) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-            val taskViewModel: TaskViewModel = viewModel()
-            val task = taskViewModel.tasks.find { it.id == taskId }
+            val task = calendarViewModel.tasks.find { it.id == taskId }
             if (task != null) {
                 TaskDetailScreen(
                     task = task,
                     onClose = { navController.popBackStack() },
                     onEdit = { editedTask ->
-                        // For edit, you may want to navigate to an edit screen or show a dialog
-                        // Here, just update the task in the ViewModel
-                        // Example: taskViewModel.updateTask(editedTask)
+                        calendarViewModel.updateTask(editedTask)
                     },
                     onDelete = { deletedTask ->
-                        taskViewModel.deleteTask(deletedTask)
+                        calendarViewModel.deleteTask(deletedTask)
                         navController.popBackStack()
                     },
-                        onToggleState = { toggledTask ->
-                        taskViewModel.toggleTaskState(toggledTask)
+                    onToggleState = { toggledTask ->
+                        calendarViewModel.toggleTaskState(toggledTask)
                     }
                 )
             } else {
