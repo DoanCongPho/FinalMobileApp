@@ -66,7 +66,7 @@ fun AppNavigation(navController: NavHostController) {
             )
             RegisterScreen(
                 vm = vm,
-                onFinish = { navController.navigate(Screen.Authen.route)},
+                onFinish = { navController.navigate(Screen.SuccessRegister.route)},
                 onBackPressed = { navController.popBackStack() }
             )
         }
@@ -89,7 +89,7 @@ fun AppNavigation(navController: NavHostController) {
                 vm = vm,
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    navController.navigate(Screen.Calendar.route) {
+                    navController.navigate(Screen.Month.route) {
                         popUpTo(Screen.Authen.route) { inclusive = true }
                     }
                 },

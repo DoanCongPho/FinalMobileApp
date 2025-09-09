@@ -22,6 +22,8 @@ object ApiClient {
         .client(client)
         .build()
 
+
+
     val registerApi: RegisterApi = retrofit.create(RegisterApi::class.java)
     val loginApi: LoginApi = retrofit.create(LoginApi::class.java)
 }
