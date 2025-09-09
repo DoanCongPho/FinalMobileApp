@@ -33,6 +33,8 @@ import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.AddTaskScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
+import com.example.finalproject.study.ui.StudyScreen
+
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
     object Register : Screen("register")
@@ -55,7 +57,7 @@ fun AppNavigation(navController: NavHostController) {
     val calendarViewModel: CalendarViewModel1 = viewModel(
         factory = CalendarViewModel1Factory()
     )
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
+    NavHost(navController = navController, startDestination = Screen.Study.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = {
@@ -197,7 +199,8 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Month.route) {
             MonthScreen(viewModel = calendarViewModel, navController = navController)
         }
-
-
+        composable(Screen.Study.route) {
+            StudyScreen(navController = navController)
+        }
     }
 }
