@@ -1,4 +1,3 @@
-
 package com.example.finalproject.Tasks.ui
 
 import androidx.compose.runtime.Composable
@@ -9,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Divider
+
 import com.example.finalproject.Tasks.model.CalendarTask
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,10 +24,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
-import com.example.finalproject.Tasks.ui.getDrawableId
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun DailyScheduleScreen(

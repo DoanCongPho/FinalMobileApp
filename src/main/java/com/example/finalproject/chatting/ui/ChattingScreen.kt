@@ -2,7 +2,7 @@ package com.example.finalproject.chatting.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,7 +31,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
@@ -56,9 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.finalproject.chatting.data.UserRepository
 import com.example.finalproject.chatting.model.Message
-import com.example.finalproject.chatting.model.User
 import com.example.finalproject.chatting.viewmodel.ChatListViewModelFactory
 import com.example.finalproject.chatting.viewmodel.UserViewModel
 import com.example.finalproject.chatting.viewmodel.UserViewModelFactory

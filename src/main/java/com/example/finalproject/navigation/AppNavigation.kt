@@ -1,5 +1,4 @@
 package com.example.finalproject.navigation
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -25,8 +24,6 @@ import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
 import com.example.finalproject.calendar.ui.CalendarScreen
-import com.example.finalproject.Tasks.model.CalendarTask
-import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1Factory
 import com.example.finalproject.chatting.ui.ChatScreen
@@ -108,7 +105,7 @@ fun AppNavigation(navController: NavHostController) {
                 vm = vm,
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    navController.navigate(Screen.Calendar.route) {
+                    navController.navigate(Screen.Month.route) {
                         popUpTo(Screen.Authen.route) { inclusive = true }
                     }
                 },

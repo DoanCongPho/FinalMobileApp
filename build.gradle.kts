@@ -70,6 +70,4 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.7")
     debugImplementation("androidx.compose.ui:ui-tooling:1.6.7")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.7")
-    implementation("androidx.compose.material3:material3:1.3.0")
-
 }

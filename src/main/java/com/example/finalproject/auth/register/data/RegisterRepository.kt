@@ -1,12 +1,8 @@
 package com.example.finalproject.auth.register.data
-// com.example.finalproject.auth.register.data/RegisterRepository.kt
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+
 import com.example.finalproject.auth.register.model.RegisterRequest
 import com.example.finalproject.auth.register.model.RegisterResponse
 import com.example.finalproject.auth.register.model.RegistrationData
-import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
-import com.example.finalproject.core.network.api.RegisterApi
 import kotlin.runCatching
 import com.example.finalproject.core.network.api.ApiClient
 
