@@ -60,7 +60,7 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Username",
+                text = "Gmail/Phone number",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Start

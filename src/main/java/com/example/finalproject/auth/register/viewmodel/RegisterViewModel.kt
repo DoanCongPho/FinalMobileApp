@@ -2,6 +2,7 @@
 package com.example.finalproject.auth.register.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.finalproject.auth.register.data.RegisterRepository
 import com.example.finalproject.auth.register.model.RegistrationData
@@ -13,18 +14,16 @@ import kotlinx.coroutines.launch
 data class RegisterUiState(
     val data: RegistrationData = RegistrationData(),
     val currentStep: Int = 0,
-    val totalSteps: Int = 7,
+    val totalSteps: Int = 8,
     val isLoading: Boolean = false,
     val error: String? = null
 )
 
-
 class RegisterViewModel(private val repo: RegisterRepository) : ViewModel() {
     private val _ui = MutableStateFlow(RegisterUiState())
     val ui: StateFlow<RegisterUiState> = _ui
-
-    // updates
-    fun updateUsername(v: String) = _ui.update { it.copy(data = it.data.copy(username = v)) }
+    fun updatePhone(v: String) = _ui.update { it.copy(data = it.data.copy(phoneNumber = v)) }
+    fun updateGmail(v: String) = _ui.update { it.copy(data = it.data.copy(gmail = v)) }
     fun updateFullName(v: String) = _ui.update { it.copy(data = it.data.copy(fullName = v)) }
     fun updateStudyField(v: String) = _ui.update { it.copy(data = it.data.copy(studyField = v)) }
     fun updateGender(g: com.example.finalproject.auth.register.model.Gender) =
@@ -42,8 +41,9 @@ class RegisterViewModel(private val repo: RegisterRepository) : ViewModel() {
             2 -> s.data.gender != null
             3 -> s.data.mode != null
             4 -> s.data.acceptedPrivacy
-            5 -> s.data.username.isNotBlank()
-            6 -> s.data.password.isNotBlank()
+            5 -> s.data.phoneNumber.isNotBlank()
+            6 -> s.data.gmail.isNotBlank()
+            7 -> s.data.password.isNotBlank()
             else -> false
         }
     }
@@ -57,24 +57,35 @@ class RegisterViewModel(private val repo: RegisterRepository) : ViewModel() {
         _ui.update { it.copy(currentStep = (it.currentStep - 1).coerceAtLeast(0)) }
     }
 
-    // submit to backend
     fun submit(onSuccess: () -> Unit, onError: (String) -> Unit) {
         val s = _ui.value
         if (s.currentStep != s.totalSteps - 1 || !s.data.acceptedPrivacy) return
         viewModelScope.launch {
             _ui.update { it.copy(isLoading = true, error = null) }
-            val res = repo.register(s.data) // suspend call
+            val res = repo.register(s.data)
             _ui.update { it.copy(isLoading = false) }
-            if (res.isSuccess) {
-                onSuccess()
-            } else {
-                val msg = res.exceptionOrNull()?.message ?: "Đăng ký thất bại"
-                _ui.update { it.copy(error = msg) }
-                onError(msg)
-            }
+            res.fold(
+                onSuccess = {
+                    onSuccess()
+                },
+                onFailure = { e ->
+                    val msg = e.message ?: "Đăng ký thất bại"
+                    _ui.update { it.copy(error = msg) }
+                    onError(msg)
+                }
+            )
         }
     }
 }
 
 
-
+class RegisterViewModelFactory(
+    private val repo: RegisterRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(RegisterViewModel::class.java)) {
+            return RegisterViewModel(repo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
