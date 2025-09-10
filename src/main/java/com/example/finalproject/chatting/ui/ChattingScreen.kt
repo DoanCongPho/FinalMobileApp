@@ -1,16 +1,16 @@
 package com.example.finalproject.chatting.ui
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Divider
@@ -28,10 +28,9 @@ import androidx.compose.ui.unit.dp
 import com.example.finalproject.chatting.model.Chat
 import com.example.finalproject.chatting.viewmodel.ChatListViewModel
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
@@ -43,22 +42,18 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.finalproject.chatting.viewmodel.MessageViewModel
 import com.example.finalproject.chatting.viewmodel.MessageViewModelFactory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import com.example.finalproject.chatting.data.UserRepository
 import com.example.finalproject.chatting.model.Message
-import com.example.finalproject.chatting.model.User
 import com.example.finalproject.chatting.viewmodel.ChatListViewModelFactory
 import com.example.finalproject.chatting.viewmodel.UserViewModel
 import com.example.finalproject.chatting.viewmodel.UserViewModelFactory
@@ -76,15 +71,15 @@ fun ChatItem(chat: Chat,viewModel: ChatListViewModel, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        val avatarUrl = viewModel.getUrlAvatar(chat)
-        AsyncImage(
-            model = avatarUrl ?: "https://via.placeholder.com/150", // fallback
-            contentDescription = "Avatar",
-            modifier = Modifier
-                .size(48.dp)
-                .background(Color.Gray, CircleShape)
-                .clip(CircleShape)
-        )
+//        val avatarUrl = viewModel.getUrlAvatar(chat)
+//        AsyncImage(
+//            model = avatarUrl ?: "https://via.placeholder.com/150", // fallback
+//            contentDescription = "Avatar",
+//            modifier = Modifier
+//                .size(48.dp)
+//                .background(Color.Gray, CircleShape)
+//                .clip(CircleShape)
+//        )
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -126,62 +121,54 @@ fun ChatListScreen(viewModel: ChatListViewModel, onChatClick: (Chat) -> Unit) {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainChatList(navController: NavController) {
     val currentUserId = "congpho123"
-
-    // Lấy ra user hiện tại
     val userViewModel: UserViewModel = viewModel(factory = UserViewModelFactory(currentUserId))
     val userState by userViewModel.currentUser.collectAsState(initial = null)
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text("Chats", fontWeight = FontWeight.Bold)
-                },
-                navigationIcon = {
-                    Text(
-                        text = "Edit",
-                        color = Color.Blue,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.clickable { println("Edit clicked") }
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { println("New chat clicked") }) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "New Chat",
-                            tint = Color.Blue
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            userState?.let { user ->
-                val chatListViewModel: ChatListViewModel = viewModel(
-                    factory = ChatListViewModelFactory(currentUserId)
-                )
-
-                ChatListScreen(chatListViewModel) { chat ->
-                    navController.navigate("chatScreen/${chat.chatId}")
-                }
-            } ?: run {
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Top bar
+        CenterAlignedTopAppBar(
+            title = { Text("Chats", fontWeight = FontWeight.Bold) },
+            modifier = Modifier.padding(top = 0.dp), // xoá insets
+            navigationIcon = {
                 Text(
-                    text = "Loading chats...",
-                    modifier = Modifier.padding(16.dp),
-                    color = Color.Gray
+                    text = "Edit",
+                    color = Color.Blue,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.clickable { println("Edit clicked") }
                 )
+            },
+            actions = {
+                IconButton(onClick = { println("New chat clicked") }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "New Chat",
+                        tint = Color.Blue
+                    )
+                }
             }
+        )
+
+        // Content
+        if (userState != null) {
+            val chatListViewModel: ChatListViewModel = viewModel(
+                factory = ChatListViewModelFactory(currentUserId)
+            )
+            ChatListScreen(chatListViewModel) { chat ->
+                navController.navigate("chatScreen/${chat.chatId}")
+            }
+        } else {
+            Text(
+                text = "Loading chats...",
+                modifier = Modifier.padding(16.dp),
+                color = Color.Gray
+            )
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,50 +180,58 @@ fun ChatScreen(
     val messages by messageViewModel.messages.collectAsState()
     var inputText by remember { mutableStateOf("") }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.Blue
-                        )
-                    }
-                },
-                title = { Text("Chat") }
+    val listState = rememberLazyListState()
 
-
-            )
-        },
-        bottomBar = {
-            ChatInputBar(
-                message = inputText,
-                onMessageChange = { inputText = it },
-                onSend = {
-                    if (inputText.isNotBlank()) {
-                        messageViewModel.sendMessage(inputText)
-                        inputText = ""
-                    }
-                }
-            )
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(0)
         }
-    ) { padding ->
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
+        // Top bar
+        CenterAlignedTopAppBar(
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.Blue
+                    )
+                }
+            },
+            title = { Text("Chat") }
+        )
+
+        // Messages list
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            reverseLayout = true // tin nhắn mới ở cuối
+            modifier = Modifier.weight(1f),
+            reverseLayout = true,
+            state = listState
         ) {
             items(messages) { message ->
                 ChatMessageItem(message = message)
             }
         }
+
+        // Input bar
+        ChatInputBar(
+            message = inputText,
+            onMessageChange = { inputText = it },
+            onSend = {
+                if (inputText.isNotBlank()) {
+                    messageViewModel.sendMessage(inputText)
+                    inputText = ""
+                }
+            }
+        )
     }
 }
+
 
 private fun Nothing?.popBackStack() {
     TODO("Not yet implemented")
