@@ -67,7 +67,7 @@ fun StudyScreen(
 
             BigActionButton(
                 label = "Review",
-                onClick = { /* navController.navigate("review") */ },
+                onClick = { navController.navigate("review") },
                 modifier = Modifier.padding(top = 24.dp)
             )
             BigActionButton(

@@ -1,6 +1,8 @@
 package com.example.finalproject.pomodoro.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -34,11 +36,7 @@ fun PomodoroScreen(
                         onClick = { navController.popBackStack() },
                         modifier = Modifier.size(56.dp) // larger tap area
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.back_button),
-                            contentDescription = "Back",
-                            modifier = Modifier.size(32.dp) // larger icon visual
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
