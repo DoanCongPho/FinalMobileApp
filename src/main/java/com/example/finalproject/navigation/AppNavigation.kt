@@ -57,6 +57,7 @@ sealed class Screen(val route: String) {
     object Month: Screen("month")
     object Day: Screen("day")
     object Pomodoro: Screen("pomodoro")
+    object Review: Screen ("review")
 }
 
         
@@ -68,7 +69,7 @@ fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
     val tokenManager = TokenManager(context)
 
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
+    NavHost(navController = navController, startDestination = Screen.Study.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
@@ -286,5 +287,19 @@ fun AppNavigation(navController: NavHostController) {
             val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
             ChatScreen(chatId = chatId, navController = navController)
         }
+
+        composable(Screen.Review.route) {
+            // supply your DI repo here; replace FakeReviewRepository with real one when ready
+            val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
+                repo = com.example.finalproject.review.data.FakeReviewRepository()
+            )
+            com.example.finalproject.review.ui.ReviewRoute(
+                onBack = { navController.popBackStack() },
+                onCreateQuiz = { /* nav to create quiz */ },
+                onFindFriends = { /* nav to friends */ },
+                factory = factory
+            )
+        }
+
     }
 }
