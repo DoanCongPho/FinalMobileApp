@@ -57,10 +57,12 @@ fun CustomRecurrenceScreen(
         mutableStateOf(draftTask?.repeatEnd ?: initialRepeatEnd) 
     }
     // Only hold a monthly pattern if the frequency is MONTHLY
-    var monthlyPattern by remember(frequency) {
+    var monthlyPattern by remember(frequency, draftTask?.monthlyPattern) {
         mutableStateOf(
             if (frequency == RepeatFrequency.MONTHLY) {
-                initialMonthlyPattern ?: MonthlyPattern.SameDay(1)
+                // Priority: 1. Draft task pattern, 2. Initial pattern, 3. Default based on task date
+                val taskDate = draftTask?.date ?: java.time.LocalDate.now()
+                draftTask?.monthlyPattern ?: initialMonthlyPattern ?: MonthlyPattern.SameDay(taskDate.dayOfMonth)
             } else null
         )
     }
@@ -73,6 +75,24 @@ fun CustomRecurrenceScreen(
     LaunchedEffect(draftTask?.repeatEnd) {
         draftTask?.repeatEnd?.let { newRepeatEnd ->
             repeatEnd = newRepeatEnd
+        }
+    }
+    
+    // Update monthlyPattern when draft task changes (e.g., when coming from EditTaskScreen)
+    LaunchedEffect(draftTask?.monthlyPattern) {
+        if (frequency == RepeatFrequency.MONTHLY) {
+            draftTask?.monthlyPattern?.let { newMonthlyPattern ->
+                monthlyPattern = newMonthlyPattern
+            }
+        }
+    }
+    
+    // Update draft task whenever monthlyPattern changes
+    LaunchedEffect(monthlyPattern) {
+        if (monthlyPattern != null) {
+            calendarViewModel.updateDraftTask { draft ->
+                draft.copy(monthlyPattern = monthlyPattern)
+            }
         }
     }
 
@@ -110,7 +130,8 @@ fun CustomRecurrenceScreen(
                                 calendarViewModel.updateDraftTask { draft ->
                                     draft.copy(
                                         repeatFrequency = frequency,
-                                        monthlyPattern = monthlyPattern
+                                        monthlyPattern = monthlyPattern,
+                                        repeatEnd = repeatEnd
                                     )
                                 }
                                 onDone(frequency, monthlyPattern, repeatEnd)
@@ -155,15 +176,25 @@ fun CustomRecurrenceScreen(
                             modifier = Modifier
                                 .size(24.dp)
                                 .clickable {
-                                    monthlyPattern = MonthlyPattern.SameDay(1)
+                                    val taskDate = draftTask?.date ?: java.time.LocalDate.now()
+                                    monthlyPattern = MonthlyPattern.SameDay(taskDate.dayOfMonth)
                                     hasChanges = true
+                                    // Update draft task immediately
+                                    calendarViewModel.updateDraftTask { draft ->
+                                        draft.copy(monthlyPattern = MonthlyPattern.SameDay(taskDate.dayOfMonth))
+                                    }
                                 }
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     // Option 2: Nth weekday each month
-                    val nth = 1 // Example: first
-                    val weekday = java.time.DayOfWeek.FRIDAY // Example: Friday
+                    val today = java.time.LocalDate.now()
+                    val weekday = today.dayOfWeek
+                    val dayOfMonth = today.dayOfMonth
+                    // Calculate which occurrence of this weekday in the month (1st, 2nd, 3rd, 4th, or 5th)
+                    val weekOfMonth = ((dayOfMonth - 1) / 7) + 1
+                    // If it's the 5th occurrence, use the 4th instead (since 5th weeks are rare and inconsistent)
+                    val nth = if (weekOfMonth == 5) 4 else weekOfMonth
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -188,6 +219,10 @@ fun CustomRecurrenceScreen(
                                 .clickable {
                                     monthlyPattern = MonthlyPattern.NthWeekday(nth, weekday)
                                     hasChanges = true
+                                    // Update draft task immediately
+                                    calendarViewModel.updateDraftTask { draft ->
+                                        draft.copy(monthlyPattern = MonthlyPattern.NthWeekday(nth, weekday))
+                                    }
                                 }
                         )
                     }

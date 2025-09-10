@@ -47,9 +47,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-import com.example.finalproject.Tasks.viewmodel.TaskViewModel
-
-
 import com.example.finalproject.Tasks.ui.getDrawableId
 
 

@@ -119,8 +119,27 @@ fun AddTaskScreen(
                             date = taskDate,
                             time = if (isAllDay) null else time,
                             repeatFrequency = repeat,
+                            repeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never,
+                            monthlyPattern = draftTask?.monthlyPattern,
                             tag = tag
                         )
+                        
+                        // Add root task manually with calendarViewModel.addTask()
+                        calendarViewModel.addTask(finalTask)
+                        
+                        // If repeatFrequency != NONE, call createTaskSeries(rootTask)
+                        if (repeat != RepeatFrequency.NONE) {
+                            // Generate series ID for the root task
+                            val seriesId = java.util.UUID.randomUUID().toString()
+                            val rootTaskWithSeries = finalTask.copy(seriesId = seriesId)
+                            
+                            // Update the root task with series ID
+                            calendarViewModel.updateTask(rootTaskWithSeries)
+                            
+                            // Create the task series
+                            calendarViewModel.createTaskSeries(rootTaskWithSeries)
+                        }
+                        
                         calendarViewModel.clearDraftTask() // Clear draft after saving
                         onSave(finalTask)
                     }

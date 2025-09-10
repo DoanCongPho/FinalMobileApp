@@ -35,5 +35,6 @@ data class CalendarTask(
     val monthlyPattern: MonthlyPattern? = null,             // Only if frequency is MONTHLY
     val repeatEnd: RepeatEnd = RepeatEnd.Never,
     val tag: String? = null,
-    val state: Int = 0 // 0 = undone, 1 = done; extensible for future states
+    val state: Int = 0, // 0 = undone, 1 = done; extensible for future states
+    val seriesId: String? = null // Null if repeatFrequency is NONE, otherwise contains series identifier
 )

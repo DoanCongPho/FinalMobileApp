@@ -161,7 +161,7 @@ fun AppNavigation(navController: NavHostController) {
                 date = date,
                 onCancel = { navController.popBackStack() },
                 onSave = { newTask ->
-                    calendarViewModel.addTask(newTask)
+                    // Task series management is now handled directly in AddTaskScreen
                     navController.popBackStack()
                 },
                 onCustomRecurrence = customRecurrenceCallback,
@@ -205,7 +205,7 @@ fun AppNavigation(navController: NavHostController) {
                     task = task,
                     onCancel = { navController.popBackStack() },
                     onSave = { editedTask ->
-                        calendarViewModel.updateTask(editedTask)
+                        // Task series management is now handled directly in EditTaskScreen
                         navController.popBackStack()
                     },
                     onCustomRecurrence = customRecurrenceCallback,

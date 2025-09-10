@@ -9,6 +9,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -117,8 +118,51 @@ fun EditTaskScreen(
                             repeatEnd = draftTask?.repeatEnd ?: task.repeatEnd,
                             monthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern,
                             tag = tag,
-                            state = task.state // Preserve completion state
+                            state = task.state, // Preserve completion state
+                            seriesId = task.seriesId // Preserve original series ID
                         )
+                        
+                        // Check if repeat pattern changed
+                        val originalRepeatFrequency = task.repeatFrequency
+                        val newRepeatFrequency = repeat
+                        
+                        if (originalRepeatFrequency == newRepeatFrequency && newRepeatFrequency != RepeatFrequency.NONE) {
+                            // No repeat pattern changes: Use updateTaskSeries() to update all tasks in series
+                            calendarViewModel.updateTaskSeries(editedTask)
+                        } else if (originalRepeatFrequency != newRepeatFrequency) {
+                            // Repeat pattern changes:
+                            
+                            // Save copy of original task before any modifications
+                            val originalTaskCopy = task.copy()
+                            
+                            // 1. Delete old series if it existed
+                            task.seriesId?.let { oldSeriesId ->
+                                calendarViewModel.deleteTaskSeries(oldSeriesId)
+                            }
+                            
+                            // 2. Remove the original task from repository
+                            calendarViewModel.deleteTask(originalTaskCopy)
+                            
+                            // 3. Add new root task manually
+                            val newRootTask = if (newRepeatFrequency != RepeatFrequency.NONE) {
+                                // Generate new series ID if it will have repeats
+                                editedTask.copy(seriesId = java.util.UUID.randomUUID().toString())
+                            } else {
+                                // Remove series ID if no longer repeating
+                                editedTask.copy(seriesId = null)
+                            }
+                            
+                            calendarViewModel.addTask(newRootTask)
+                            
+                            // 4. Call createTaskSeries(newRootTask) if new pattern exists
+                            if (newRepeatFrequency != RepeatFrequency.NONE) {
+                                calendarViewModel.createTaskSeries(newRootTask)
+                            }
+                        } else {
+                            // Simple update for non-repeating tasks
+                            calendarViewModel.updateTask(editedTask)
+                        }
+                        
                         calendarViewModel.clearDraftTask() // Clear draft after saving
                         onSave(editedTask)
                     }

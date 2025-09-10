@@ -94,7 +94,7 @@ class CalendarViewModel1(): ViewModel() {
     }
 
     fun deleteTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
-        CalendarRepository1.removeTask(task)
+        CalendarRepository1.deleteTask(task)
     }
 
     fun updateTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
@@ -104,6 +104,19 @@ class CalendarViewModel1(): ViewModel() {
     fun toggleTaskState(task: com.example.finalproject.Tasks.model.CalendarTask) {
         val updatedTask = task.copy(state = if (task.state == 0) 1 else 0)
         CalendarRepository1.updateTask(updatedTask)
+    }
+    
+    // Task series management methods
+    fun createTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
+        CalendarRepository1.createTaskSeries(rootTask)
+    }
+    
+    fun deleteTaskSeries(seriesId: String) {
+        CalendarRepository1.deleteTaskSeries(seriesId)
+    }
+    
+    fun updateTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
+        CalendarRepository1.updateTaskSeries(rootTask)
     }
     
     // Draft task management methods
