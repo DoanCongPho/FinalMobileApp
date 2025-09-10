@@ -8,6 +8,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +38,7 @@ fun ordinal(n: Int): String {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomRecurrenceScreen(
     initialFrequency: RepeatFrequency,
@@ -72,63 +76,57 @@ fun CustomRecurrenceScreen(
         }
     }
 
-    Surface(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(Color.White),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = getDrawableId("back_button")),
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable {
-                            if (hasChanges) showWarning = true else onBack()
-                        }
-                )
-                Text(
-                    text = "Back",
-                    color = Color(0xFF1976D2),
-                    fontSize = 18.sp,
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                        .clickable {
-                            if (hasChanges) showWarning = true else onBack()
-                        }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "Custom Recurrence",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "Done",
-                    color = Color(0xFF1976D2),
-                    fontSize = 18.sp,
-                    modifier = Modifier
-                        .clickable {
-                            // Update the draft task with new repeat settings
-                            calendarViewModel.updateDraftTask { draft ->
-                                draft.copy(
-                                    repeatFrequency = frequency,
-                                    monthlyPattern = monthlyPattern
-                                )
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Custom Recurrence",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                },
+                navigationIcon = {
+                    Image(
+                        painter = painterResource(id = getDrawableId("back_button")),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable {
+                                if (hasChanges) showWarning = true else onBack()
                             }
-                            onDone(frequency, monthlyPattern, repeatEnd)
-                        }
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+                            .padding(start = 8.dp)
+                    )
+                },
+                actions = {
+                    Text(
+                        text = "Done",
+                        color = Color(0xFF1976D2),
+                        fontSize = 18.sp,
+                        modifier = Modifier
+                            .clickable {
+                                // Update the draft task with new repeat settings
+                                calendarViewModel.updateDraftTask { draft ->
+                                    draft.copy(
+                                        repeatFrequency = frequency,
+                                        monthlyPattern = monthlyPattern
+                                    )
+                                }
+                                onDone(frequency, monthlyPattern, repeatEnd)
+                            }
+                            .padding(end = 16.dp)
+                    )
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color.White)
+        ) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Only show monthly pattern options if frequency is MONTHLY

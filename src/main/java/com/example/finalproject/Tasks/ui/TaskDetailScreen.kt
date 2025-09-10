@@ -17,6 +17,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.finalproject.Tasks.model.CalendarTask
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -50,7 +53,7 @@ import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.Tasks.ui.getDrawableId
 
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
     task: CalendarTask,
@@ -60,45 +63,48 @@ fun TaskDetailScreen(
     onToggleState: (CalendarTask) -> Unit = {}
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(Color.White),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Close button
-            IconButtonWithHover(
-                normalIcon = "close_button",
-                hoverIcon = "close_button_hover",
-                contentDescription = "Close",
-                modifier = Modifier.padding(start = 8.dp)
-            ) { onClose() }
-            Spacer(modifier = Modifier.weight(1f))
-            // Edit button
-            IconButtonWithHover(
-                normalIcon = "edit_button",
-                hoverIcon = "edit_button_hover",
-                contentDescription = "Edit",
-                modifier = Modifier.padding(end = 8.dp)
-            ) { onEdit(task) }
-            // Delete button
-            IconButtonWithHover(
-                normalIcon = "delete_button",
-                hoverIcon = "delete_button_hover",
-                contentDescription = "Delete",
-                modifier = Modifier.padding(end = 8.dp)
-            ) { showDeleteConfirm = true }
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { /* Empty title */ },
+                navigationIcon = {
+                    IconButtonWithHover(
+                        normalIcon = "close_button",
+                        hoverIcon = "close_button_hover",
+                        contentDescription = "Close",
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) { onClose() }
+                },
+                actions = {
+                    IconButtonWithHover(
+                        normalIcon = "edit_button",
+                        hoverIcon = "edit_button_hover",
+                        contentDescription = "Edit",
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) { onEdit(task) }
+                    IconButtonWithHover(
+                        normalIcon = "delete_button",
+                        hoverIcon = "delete_button_hover",
+                        contentDescription = "Delete",
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) { showDeleteConfirm = true }
+                }
+            )
         }
-        // Main content
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 72.dp, start = 24.dp, end = 24.dp),
-            horizontalAlignment = Alignment.Start
+    ) { paddingValues ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .background(Color.White)
         ) {
+            // Main content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 16.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
             // Tag
             Text(
                 text = task.tag ?: "",
@@ -177,6 +183,7 @@ fun TaskDetailScreen(
                     Button(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
                 }
             )
+        }
         }
     }
 }

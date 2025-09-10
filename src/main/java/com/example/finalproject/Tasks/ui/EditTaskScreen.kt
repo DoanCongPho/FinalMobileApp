@@ -99,13 +99,6 @@ fun EditTaskScreen(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Edit Task", // Changed from "New Task"
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
                 text = "Save",
                 color = Color(0xFF1976D2),
                 fontSize = 18.sp,

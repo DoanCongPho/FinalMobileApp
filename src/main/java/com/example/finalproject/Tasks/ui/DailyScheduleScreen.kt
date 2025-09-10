@@ -17,6 +17,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
@@ -26,7 +29,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.painterResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import com.example.finalproject.Tasks.ui.HourRow
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyScheduleScreen(
     date: String,
@@ -46,54 +51,64 @@ fun DailyScheduleScreen(
     }
     var expanded by remember { mutableStateOf(false) }
     var selectedButton by remember { mutableStateOf("calendar") }
-    Box(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header section 1: Navigation bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = getDrawableId("back_button")),
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable { onBack() }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = parsedDate.format(DateTimeFormatter.ofPattern("dd-MM-yy")),
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Image(
-                    painter = painterResource(id = getDrawableId("small_plane_button")),
-                    contentDescription = "Small Plane",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Image(
-                    painter = painterResource(id = getDrawableId("search_button")),
-                    contentDescription = "Search",
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Image(
-                    painter = painterResource(id = getDrawableId("plane_button")),
-                    contentDescription = "Plane",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-
-            // Header section 2: All-day tasks
-            val allDayTasks = tasks.filter { it.isAllDay && it.date == parsedDate }
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = parsedDate.format(DateTimeFormatter.ofPattern("dd-MM-yy")),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Image(
+                            painter = painterResource(id = getDrawableId("small_plane_button")),
+                            contentDescription = "Small Plane",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    Image(
+                        painter = painterResource(id = getDrawableId("back_button")),
+                        contentDescription = "Back",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable { onBack() }
+                            .padding(start = 8.dp)
+                    )
+                },
+                actions = {
+                    Image(
+                        painter = painterResource(id = getDrawableId("search_button")),
+                        contentDescription = "Search",
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Image(
+                        painter = painterResource(id = getDrawableId("plane_button")),
+                        contentDescription = "Plane",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .padding(end = 8.dp)
+                    )
+                }
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header section 2: All-day tasks (moved Header section 1 to TopAppBar above)
+                val allDayTasks = tasks.filter { it.isAllDay && it.date == parsedDate }
             Surface(
                 color = Color.White,
                 modifier = Modifier.fillMaxWidth()
@@ -263,6 +278,7 @@ fun DailyScheduleScreen(
                     )
                 }
             }
+        }
         }
     }
 }

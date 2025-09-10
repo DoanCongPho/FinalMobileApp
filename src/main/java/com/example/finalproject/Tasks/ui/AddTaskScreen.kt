@@ -127,8 +127,8 @@ fun AddTaskScreen(
                 }
             )
         }
-        // ...existing UI for inputs, toggles, dialogs...
-        // Title input, details, toggles, dialogs, etc. remain as is
+        
+        // Main UI content
         Column(
             modifier = Modifier
                 .fillMaxWidth()

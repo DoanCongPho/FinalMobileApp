@@ -29,6 +29,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EndsScreen(
     initialRepeatEnd: RepeatEnd,
@@ -64,58 +65,42 @@ fun EndsScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(Color.White)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Back button and text
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { onBack() }
-                ) {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Ends",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                },
+                navigationIcon = {
                     Image(
                         painter = painterResource(id = getDrawableId("back_button")),
                         contentDescription = "Back",
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { onBack() }
+                            .padding(start = 8.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                },
+                actions = {
                     Text(
-                        text = "Back",
+                        text = "Done",
                         color = Color(0xFF1976D2),
-                        fontSize = 18.sp
+                        fontSize = 18.sp,
+                        modifier = Modifier
+                            .clickable {
+                                // Update draft task with new repeat end
+                                calendarViewModel.updateDraftTask { draft ->
+                                    draft.copy(repeatEnd = selectedOption)
+                                }
+                                onDone(selectedOption)
+                            }
+                            .padding(end = 16.dp)
                     )
                 }
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                // Title
-                Text(
-                    text = "Ends",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                // Done button
-                Text(
-                    text = "Done",
-                    color = Color(0xFF1976D2),
-                    fontSize = 18.sp,
-                    modifier = Modifier.clickable {
-                        // Update draft task with new repeat end
-                        calendarViewModel.updateDraftTask { draft ->
-                            draft.copy(repeatEnd = selectedOption)
-                        }
-                        onDone(selectedOption)
-                    }
-                )
-            }
+            )
         }
     ) { paddingValues ->
         Column(
