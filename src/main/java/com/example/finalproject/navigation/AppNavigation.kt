@@ -1,5 +1,6 @@
 package com.example.finalproject.navigation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,12 +41,16 @@ import com.example.finalproject.study.ui.StudyScreen
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.createquiz.data.CreateQuizRepository
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.core.network.TokenProvider
 import androidx.navigation.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
 
+import com.example.finalproject.createquiz.data.CreateQuizRepository
+import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
 
 
 sealed class Screen(val route: String) {
@@ -67,6 +72,7 @@ sealed class Screen(val route: String) {
     object Day: Screen("day")
     object Pomodoro: Screen("pomodoro")
     object Review: Screen ("review")
+    object Quiz: Screen("quiz")
     object CreateQuizRoot : Screen("create_quiz")
     object CreateQuizChoose : Screen("create_quiz/choose")
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
@@ -91,8 +97,14 @@ fun AppNavigation(navController: NavHostController) {
         }
     }
 
+    // Set up token provider for API calls
+    LaunchedEffect(Unit) {
+        val tokenProvider = TokenProvider(tokenManager)
+        ApiClient.setTokenProvider { tokenProvider.getToken() }
+    }
 
     NavHost(navController = navController, startDestination = Screen.Month.route) {
+    NavHost(navController = navController, startDestination = Screen.Authen.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
@@ -130,6 +142,7 @@ fun AppNavigation(navController: NavHostController) {
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
                     navController.navigate(Screen.Month.route) {
+                    navController.navigate(Screen.Quiz.route) {
                         popUpTo(Screen.Authen.route) { inclusive = true }
                     }
                 },
