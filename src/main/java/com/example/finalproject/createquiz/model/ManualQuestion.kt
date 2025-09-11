@@ -1,8 +1,7 @@
-package com.example.finalproject.createquiz.model
+package com.example.finalproject.createquiz.model // adjust to your package
 
 data class ManualQuestion(
-    val id: String,
-    var question: String = "",
-    var answers: MutableList<String> = mutableListOf("",""),
-    var correctIndex: Int? = null
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val question: String = "",
+    val answer: String = ""
 )

@@ -44,7 +44,8 @@ import com.example.finalproject.core.network.api.ApiClient
 import androidx.navigation.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavController
+import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
+
 
 
 sealed class Screen(val route: String) {
@@ -68,7 +69,6 @@ sealed class Screen(val route: String) {
     object Review: Screen ("review")
     object CreateQuizRoot : Screen("create_quiz")
     object CreateQuizChoose : Screen("create_quiz/choose")
-    object CreateQuizPrompt : Screen("create_quiz/prompt")
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
     object CreateQuizMode : Screen("create_quiz/mode")
     object CreateQuizManual : Screen("create_quiz/manual")
@@ -346,22 +346,16 @@ fun AppNavigation(navController: NavHostController) {
                 com.example.finalproject.createquiz.ui.ChooseSourceScreen(nav = navController, vm = createQuizVm)
             }
 
-            // Prompt (AI path)
-            composable(Screen.CreateQuizPrompt.route) { backStackEntry ->
-                val parentEntry = remember(backStackEntry) {
-                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
-                }
-                val createQuizVm: CreateQuizViewModel = viewModel(
-                    parentEntry,
-                    factory = CreateQuizViewModelFactory(CreateQuizRepository(ApiClient.quizApi))
-                )
-                com.example.finalproject.createquiz.ui.PromptScreen(nav = navController, vm = createQuizVm)
-            }
-
-
             composable(Screen.CreateQuizManual.route) {
+                val vm: ManualQuizViewModel = viewModel()
                 com.example.finalproject.createquiz.ui.ManualQuizScreen(
-                    navController = navController,
+                    viewModel = vm,
+                    onFinish = {
+                        navController.navigate("create_quiz/success?quizId=manual_dev") {
+                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                     onBack = { navController.popBackStack() }
                 )
             }

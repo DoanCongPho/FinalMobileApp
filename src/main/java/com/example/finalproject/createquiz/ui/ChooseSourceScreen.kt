@@ -103,15 +103,24 @@ fun ChooseSourceScreen(
             }
 
             Spacer(Modifier.height(16.dp))
-            StepDots(current = 0, total = 2)
+            StepDots(current = 0, total = 1) // was total = 2
             Spacer(Modifier.height(16.dp))
 
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Box(
-                    modifier = Modifier.size(96.dp).background(
-                        if (ui.sources.isNotEmpty()) Color(0xFFFF974A) else Color(0xFFFFC79F),
-                        CircleShape
-                    ).clickable(enabled = ui.sources.isNotEmpty()) { nav.navigate("create_quiz/prompt") },
+                    modifier = Modifier
+                        .size(96.dp)
+                        .background(
+                            if (ui.sources.isNotEmpty()) Color(0xFFFF974A) else Color(0xFFFFC79F),
+                            CircleShape
+                        )
+                        .clickable(enabled = ui.sources.isNotEmpty()) {
+                            // TEST PATH: go straight to success screen
+                            nav.navigate("create_quiz/success?quizId=dev_test") {
+                                popUpTo("create_quiz") { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.ArrowForward, contentDescription = "Next", tint = Color.White)
