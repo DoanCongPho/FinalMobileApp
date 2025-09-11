@@ -1,0 +1,62 @@
+package com.example.finalproject.journey.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
+import com.example.finalproject.journey.data.QuizRepository
+import com.example.finalproject.journey.model.Quiz
+import kotlinx.coroutines.launch
+
+class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
+    
+    private val _quizzes = mutableStateOf<List<Quiz>>(emptyList())
+    val quizzes: State<List<Quiz>> = _quizzes
+
+    private val _isLoading = mutableStateOf(false)
+    val isLoading: State<Boolean> = _isLoading
+
+    private val _errorMessage = mutableStateOf<String?>(null)
+    val errorMessage: State<String?> = _errorMessage
+
+    fun loadQuizzes() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            
+            try {
+                val response = repository.getUserQuizzes()
+                if (response.isSuccessful) {
+                    _quizzes.value = response.body() ?: emptyList()
+                } else {
+                    _errorMessage.value = "Failed to load quizzes: ${response.message()}"
+                    _quizzes.value = emptyList()
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error: ${e.message}"
+                _quizzes.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun getTotalQuestions(): Int {
+        return _quizzes.value.sumOf { it.questions.size }
+    }
+
+    fun getQuizById(quizId: Int): Quiz? {
+        return _quizzes.value.find { it.id == quizId }
+    }
+}
+
+class QuizViewModelFactory(private val repository: QuizRepository) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(QuizViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return QuizViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
