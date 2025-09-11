@@ -6,8 +6,7 @@ import com.example.finalproject.auth.register.model.RegistrationData
 import kotlin.runCatching
 import com.example.finalproject.core.network.api.ApiClient
 
-class RegisterRepository {
-    private val api = ApiClient.registerApi
+class RegisterRepository(private val api: ApiClient.ApiClientHolder) {
 
     suspend fun register(data: RegistrationData): Result<RegisterResponse> {
         return runCatching {
@@ -17,7 +16,7 @@ class RegisterRepository {
                 password = data.password,
                 name = data.fullName
             )
-            api.register(req)
+            api.registerApi.register(req)
         }
     }
 }

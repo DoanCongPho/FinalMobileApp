@@ -41,6 +41,12 @@ class LoginViewModel(
             if (res.isSuccess) {
                 val token = res.getOrNull()?.access_token ?: ""
                 tokenManager.saveAccessToken(token)
+
+                val userRes = repo.fetchUserProfile()
+                if (userRes.isSuccess) {
+                    tokenManager.saveUserId(userRes.getOrNull()?.id ?: 0)
+                }
+
                 onSuccess()
             } else {
                 val e = res.exceptionOrNull()
@@ -59,6 +65,8 @@ class LoginViewModel(
             }
         }
     }
+
+
 
 }
 

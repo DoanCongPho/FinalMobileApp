@@ -5,17 +5,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.finalproject.AuthenPage
 import com.example.finalproject.auth.login.data.LoginRepository
 import com.example.finalproject.auth.login.viewmodel.LoginViewModel
 import com.example.finalproject.auth.login.viewmodel.LoginViewModelFactory
 import com.example.finalproject.auth.login.ui.LoginScreen
 import com.example.finalproject.auth.register.data.RegisterRepository
-import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.ui.SuccessRegistrationScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
@@ -48,6 +45,9 @@ import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
 
 
+import com.example.finalproject.core.DataStore.TokenManager
+import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.main.ui.MainScreen
 
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
@@ -74,16 +74,17 @@ sealed class Screen(val route: String) {
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
     object CreateQuizMode : Screen("create_quiz/mode")
     object CreateQuizManual : Screen("create_quiz/manual")
-}
 
         
+    object Main: Screen("main")
+    object NewMessage: Screen("newMessage")
+    object CreateGroup: Screen("createGroup")
+}
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    val calendarViewModel: CalendarViewModel1 = viewModel(
-        factory = CalendarViewModel1Factory()
-    )
     val context = LocalContext.current
-    val tokenManager = TokenManager(context)
+    val tokenManager = TokenManager.getInstance(context)
+    val apiHolder = ApiClient.create(tokenManager)
 
     // Set up token provider for API calls
     LaunchedEffect(Unit) {
@@ -92,20 +93,19 @@ fun AppNavigation(navController: NavHostController) {
     }
 
     NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
-            AuthenPage (
+            AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) }
             )
         }
 
         composable(Screen.Register.route) {
-            val vm: RegisterViewModel = viewModel(
-                factory = RegisterViewModelFactory(RegisterRepository())
-            )
+            val vm: RegisterViewModel = viewModel(factory = RegisterViewModelFactory(RegisterRepository(apiHolder)))
             RegisterScreen(
                 vm = vm,
-                onFinish = { navController.navigate(Screen.Authen.route) },
+                onFinish = { navController.navigate(Screen.SuccessRegister.route)},
                 onBackPressed = { navController.popBackStack() }
             )
         }
@@ -121,14 +121,13 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Login.route){
-            val vm: LoginViewModel = viewModel(
-                factory = LoginViewModelFactory(LoginRepository(), tokenManager)
-            )
+            val vm: LoginViewModel = viewModel(factory = LoginViewModelFactory(LoginRepository(apiHolder), tokenManager))
             LoginScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
                     navController.navigate(Screen.Quiz.route) {
+                    navController.navigate("main") {
                         popUpTo(Screen.Authen.route) { inclusive = true }
                     }
                 },
@@ -308,6 +307,9 @@ fun AppNavigation(navController: NavHostController) {
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getString("chatId") ?: ""
             ChatScreen(chatId = chatId, navController = navController)
+        // ✅ Sau khi login → chuyển sang main app flow
+        composable("main") {
+            MainScreen()
         }
 
         composable(Screen.Review.route) {
