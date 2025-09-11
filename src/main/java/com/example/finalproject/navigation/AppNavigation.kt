@@ -42,16 +42,11 @@ import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.core.network.TokenProvider
-import androidx.navigation.navigation
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
-<<<<<<< HEAD
-
-=======
 import com.example.finalproject.createquiz.data.CreateQuizRepository
+import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
->>>>>>> b3c7c3f35a63ae79689cdd57db51ec5142d965cf
+
 
 
 sealed class Screen(val route: String) {
@@ -371,7 +366,5 @@ fun AppNavigation(navController: NavHostController) {
                     onBackToMenu = { navController.popBackStack() }
                 )
             }
-        
-
     }
 }
