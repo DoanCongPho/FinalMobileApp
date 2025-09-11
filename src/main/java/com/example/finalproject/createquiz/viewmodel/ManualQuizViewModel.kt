@@ -1,89 +1,59 @@
-//package com.example.finalproject.createquiz.viewmodel
-//
-//import androidx.lifecycle.ViewModel
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import java.util.UUID
-//import com.example.finalproject.createquiz.model.ManualQuestion
-//
-//data class ManualQuizUiState(
-//    val items: List<ManualQuestion> = listOf(ManualQuestion(UUID.randomUUID().toString()))
-//)
-//
-//class ManualQuizViewModel : ViewModel() {
-//    private val _ui = MutableStateFlow(ManualQuizUiState())
-//    val ui: StateFlow<ManualQuizUiState> = _ui
-//
-//    fun addQuestion() {
-//        _ui.value = _ui.value.copy(
-//            items = _ui.value.items + ManualQuestion(UUID.randomUUID().toString())
-//        )
-//    }
-//
-//    fun removeQuestion(id: String) {
-//        _ui.value = _ui.value.copy(items = _ui.value.items.filterNot { it.id == id })
-//        if (_ui.value.items.isEmpty()) addQuestion()
-//    }
-//
-//    fun setQuestionText(id: String, text: String) {
-//        _ui.value = _ui.value.copy(
-//            items = _ui.value.items.map { if (it.id == id) it.copy(question = text) else it }
-//        )
-//    }
-//
-//    fun setAnswerText(id: String, idx: Int, text: String) {
-//        val updated = _ui.value.items.map { q ->
-//            if (q.id == id) {
-//                val newAns = q.answers.toMutableList()
-//                while (idx >= newAns.size) newAns.add("")
-//                newAns[idx] = text
-//                q.copy(answers = newAns)
-//            } else q
-//        }
-//        _ui.value = _ui.value.copy(items = updated)
-//    }
-//
-//    fun addAnswer(id: String) {
-//        _ui.value = _ui.value.copy(
-//            items = _ui.value.items.map { q ->
-//                if (q.id == id) q.copy(answers = (q.answers + "" ).toMutableList()) else q
-//            }
-//        )
-//    }
-//
-//    fun removeAnswer(id: String, idx: Int) {
-//        _ui.value = _ui.value.copy(
-//            items = _ui.value.items.map { q ->
-//                if (q.id == id && q.answers.size > 2) {
-//                    val list = q.answers.toMutableList()
-//                    list.removeAt(idx)
-//                    val newCorrect = when {
-//                        q.correctIndex == null -> null
-//                        q.correctIndex!! == idx -> null
-//                        q.correctIndex!! > idx -> q.correctIndex!! - 1
-//                        else -> q.correctIndex
-//                    }
-//                    q.copy(answers = list, correctIndex = newCorrect)
-//                } else q
-//            }
-//        )
-//    }
-//
-//    fun setCorrect(id: String, idx: Int) {
-//        _ui.value = _ui.value.copy(
-//            items = _ui.value.items.map { q ->
-//                if (q.id == id) q.copy(correctIndex = idx) else q
-//            }
-//        )
-//    }
-//
-//    fun canFinish(): Boolean {
-//        return _ui.value.items.any() && _ui.value.items.all { q ->
-//            q.question.isNotBlank() &&
-//                    q.answers.size >= 2 &&
-//                    q.answers.all { it.isNotBlank() } &&
-//                    q.correctIndex != null &&
-//                    q.correctIndex!! in q.answers.indices
-//        }
-//    }
-//}
+package com.example.finalproject.createquiz.viewmodel
+
+import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import com.example.finalproject.createquiz.model.ManualQuestion
+
+data class ManualUiState(
+    val items: List<ManualQuestion> = emptyList(),
+    val draftQuestion: String = "",
+    val draftAnswer: String = "",
+    val canSubmit: Boolean = false,
+    val showEmptyError: Boolean = false
+)
+
+class ManualQuizViewModel : ViewModel() {
+
+    private val _state = MutableStateFlow(ManualUiState())
+    val state: StateFlow<ManualUiState> = _state
+
+    fun onQuestionChange(text: String) {
+        _state.update { it.copy(draftQuestion = text, showEmptyError = false, canSubmit = canSubmitInternal(it.copy(draftQuestion = text))) }
+    }
+
+    fun onAnswerChange(text: String) {
+        _state.update { it.copy(draftAnswer = text, showEmptyError = false, canSubmit = canSubmitInternal(it.copy(draftAnswer = text))) }
+    }
+
+    fun addFlashcard() {
+        val s = _state.value
+        if (s.draftQuestion.isBlank() || s.draftAnswer.isBlank()) {
+            _state.update { it.copy(showEmptyError = true) }
+            return
+        }
+        val newItem = ManualQuestion(question = s.draftQuestion.trim(), answer = s.draftAnswer.trim())
+        _state.update {
+            it.copy(
+                items = it.items + newItem,
+                draftQuestion = "",
+                draftAnswer = "",
+                canSubmit = canSubmitInternal(it.copy(items = it.items + newItem, draftQuestion = "", draftAnswer = ""))
+            )
+        }
+    }
+
+    fun removeFlashcard(id: String) {
+        _state.update { old ->
+            val next = old.items.filterNot { it.id == id }
+            old.copy(items = next, canSubmit = canSubmitInternal(old.copy(items = next)))
+        }
+    }
+
+    private fun canSubmitInternal(s: ManualUiState): Boolean {
+        return s.items.isNotEmpty()
+    }
+
+    fun currentFlashcards(): List<ManualQuestion> = _state.value.items
+}

@@ -42,6 +42,13 @@ import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.core.network.TokenProvider
+import androidx.navigation.navigation
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
+import com.example.finalproject.createquiz.data.CreateQuizRepository
+import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+
 
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
@@ -63,6 +70,11 @@ sealed class Screen(val route: String) {
     object Pomodoro: Screen("pomodoro")
     object Review: Screen ("review")
     object Quiz: Screen("quiz")
+    object CreateQuizRoot : Screen("create_quiz")
+    object CreateQuizChoose : Screen("create_quiz/choose")
+    object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
+    object CreateQuizMode : Screen("create_quiz/mode")
+    object CreateQuizManual : Screen("create_quiz/manual")
 }
 
         
@@ -315,6 +327,47 @@ fun AppNavigation(navController: NavHostController) {
         composable(Screen.Quiz.route) {
             QuizMainScreen()
         }
+            // Choose Source (AI path)
+            composable(Screen.CreateQuizChoose.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(CreateQuizRepository(ApiClient.quizApi))
+                )
+                com.example.finalproject.createquiz.ui.ChooseSourceScreen(nav = navController, vm = createQuizVm)
+            }
+
+            composable(Screen.CreateQuizManual.route) {
+                val vm: ManualQuizViewModel = viewModel()
+                com.example.finalproject.createquiz.ui.ManualQuizScreen(
+                    viewModel = vm,
+                    onFinish = {
+                        navController.navigate("create_quiz/success?quizId=manual_dev") {
+                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Success
+            composable(
+                Screen.CreateQuizSuccess.route,
+                arguments = listOf(navArgument("quizId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                })
+            ) {
+                com.example.finalproject.createquiz.ui.SuccessScreen(
+                    nav = navController,
+                    onGetThere = { navController.navigate(Screen.Study.route) },
+                    onBackToMenu = { navController.popBackStack() }
+                )
+            }
+        
 
     }
 }
