@@ -38,6 +38,14 @@ import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.study.ui.StudyScreen
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
+import com.example.finalproject.createquiz.data.CreateQuizRepository
+import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+import com.example.finalproject.core.network.api.ApiClient
+import androidx.navigation.navigation
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+
 
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
@@ -58,6 +66,12 @@ sealed class Screen(val route: String) {
     object Day: Screen("day")
     object Pomodoro: Screen("pomodoro")
     object Review: Screen ("review")
+    object CreateQuizRoot : Screen("create_quiz")
+    object CreateQuizChoose : Screen("create_quiz/choose")
+    object CreateQuizPrompt : Screen("create_quiz/prompt")
+    object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
+    object CreateQuizMode : Screen("create_quiz/mode")
+    object CreateQuizManual : Screen("create_quiz/manual")
 }
 
         
@@ -68,8 +82,17 @@ fun AppNavigation(navController: NavHostController) {
     )
     val context = LocalContext.current
     val tokenManager = TokenManager(context)
+    class CreateQuizViewModelFactory(
+        private val repo: CreateQuizRepository
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return CreateQuizViewModel(repo) as T
+        }
+    }
 
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
+
+    NavHost(navController = navController, startDestination = Screen.Review.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
@@ -289,17 +312,74 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Review.route) {
-            // supply your DI repo here; replace FakeReviewRepository with real one when ready
             val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
                 repo = com.example.finalproject.review.data.FakeReviewRepository()
             )
             com.example.finalproject.review.ui.ReviewRoute(
                 onBack = { navController.popBackStack() },
-                onCreateQuiz = { /* nav to create quiz */ },
+                onCreateQuiz = { navController.navigate(Screen.CreateQuizRoot.route) },
                 onFindFriends = { /* nav to friends */ },
                 factory = factory
             )
         }
+        navigation(
+            startDestination = Screen.CreateQuizMode.route, // now starts at mode screen
+            route = Screen.CreateQuizRoot.route
+        ) {
+            // Mode screen
+            composable(Screen.CreateQuizMode.route) {
+                com.example.finalproject.createquiz.ui.ChooseModeScreen(
+                    onCreateByAI = { navController.navigate(Screen.CreateQuizChoose.route) },
+                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) }
+                )
+            }
 
+            // Choose Source (AI path)
+            composable(Screen.CreateQuizChoose.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(CreateQuizRepository(ApiClient.quizApi))
+                )
+                com.example.finalproject.createquiz.ui.ChooseSourceScreen(nav = navController, vm = createQuizVm)
+            }
+
+            // Prompt (AI path)
+            composable(Screen.CreateQuizPrompt.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(CreateQuizRepository(ApiClient.quizApi))
+                )
+                com.example.finalproject.createquiz.ui.PromptScreen(nav = navController, vm = createQuizVm)
+            }
+
+
+            composable(Screen.CreateQuizManual.route) {
+                com.example.finalproject.createquiz.ui.ManualQuizScreen(
+                    navController = navController,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Success
+            composable(
+                Screen.CreateQuizSuccess.route,
+                arguments = listOf(navArgument("quizId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                })
+            ) {
+                com.example.finalproject.createquiz.ui.SuccessScreen(
+                    nav = navController,
+                    onGetThere = { navController.navigate(Screen.Study.route) },
+                    onBackToMenu = { navController.popBackStack() }
+                )
+            }
+        }
     }
 }

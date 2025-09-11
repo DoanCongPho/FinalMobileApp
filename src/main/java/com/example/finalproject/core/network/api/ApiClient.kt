@@ -24,6 +24,12 @@ object ApiClient {
 
     val registerApi: RegisterApi = retrofit.create(RegisterApi::class.java)
     val loginApi: LoginApi = retrofit.create(LoginApi::class.java)
+
+    val quizApi: com.example.finalproject.createquiz.data.QuizApi =
+        retrofit.create(com.example.finalproject.createquiz.data.QuizApi::class.java)
+
 }
+
+
 
 
