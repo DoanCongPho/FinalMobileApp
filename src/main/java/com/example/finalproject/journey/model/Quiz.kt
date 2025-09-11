@@ -1,12 +1,13 @@
 package com.example.finalproject.journey.model
 
-import java.time.LocalDateTime
+import com.google.gson.annotations.SerializedName
+
 
 data class Quiz(
     val id: Int,
     val user_id: Int,
     val title: String?,
-    val created_at: LocalDateTime,
-    val updated_at: LocalDateTime,
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("updated_at") val updatedAt: String,
     val questions: List<QuizQuestion> = emptyList()
 )

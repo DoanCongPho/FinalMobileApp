@@ -14,9 +14,9 @@ import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 
 @Composable
 fun QuizMainScreen(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    viewModel: QuizViewModel
 ) {
-    val viewModel: QuizViewModel = viewModel(factory = QuizViewModelFactory(QuizRepository()))
     
     NavHost(
         navController = navController,

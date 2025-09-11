@@ -3,6 +3,7 @@ package com.example.finalproject.navigation
 import ChatListScreen
 import ChatScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,13 +12,18 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.finalproject.Tasks.ui.AddTaskScreen
+import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
+import com.example.finalproject.Tasks.ui.DailyScheduleScreen
+import com.example.finalproject.Tasks.ui.EditTaskScreen
+import com.example.finalproject.Tasks.ui.EndsScreen
+import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
 import com.example.finalproject.calendar.ui.CalendarScreen
-import com.example.finalproject.calendar.ui.DayScreen
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1Factory
 import com.example.finalproject.chatting.data.ConversationRepository
@@ -31,6 +37,16 @@ import com.example.finalproject.chatting.viewmodel.ConversationViewModel
 import com.example.finalproject.chatting.viewmodel.ConversationViewModelFactory
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.createquiz.data.CreateQuizRepository
+import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
+import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
+import com.example.finalproject.journey.data.QuizRepository
+import com.example.finalproject.journey.ui.QuizMainScreen
+import com.example.finalproject.journey.viewmodel.QuizViewModel
+import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
+import com.example.finalproject.pomodoro.ui.PomodoroScreen
+import com.example.finalproject.study.ui.StudyScreen
 import java.time.LocalDate
 
 
@@ -83,34 +99,18 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             // ProfileScreen()
         }
 
+
         composable(Screen.Calendar.route) {
             val vm: CalendarViewModel =
                 viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
             CalendarScreen(
                 viewModel = vm,
+                navController,
                 onNavigateToStudy = { navController.navigate(Screen.Study.route) },
                 onNavigateToChat = { navController.navigate(Screen.Chat.route) },
                 onNavigateToAccount = { navController.navigate(Screen.Account.route) }
             )
         }
-
-        composable(
-            route = "day/{date}",
-            arguments = listOf(navArgument("date") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val dateString = backStackEntry.arguments?.getString("date") ?: ""
-            val date = LocalDate.parse(dateString)
-            DayScreen(
-                date = date,
-                viewModel = calendarViewModel,
-                onDateChange = { newDate ->
-                    navController.navigate("day/$newDate") {
-                        popUpTo("day/{date}") { inclusive = true }
-                    }
-                }
-            )
-        }
-
         composable(
             route = "chatScreen/{chatId}/{displayName}",
             arguments = listOf(
@@ -153,7 +153,229 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             )
         }
 
+
+        composable(Screen.DailySchedule.route) { backStackEntry ->
+            val dateString = backStackEntry.arguments?.getString("date") ?: ""
+//          val taskViewModel: TaskViewModel = viewModel()
+            val date = LocalDate.parse(dateString)
+            val tasks = calendarViewModel.tasks.filter { it.date == date }
+            DailyScheduleScreen(
+                date = dateString,
+                tasks = tasks,
+                onTaskClick = { taskId ->
+                    navController.navigate("task_detail/$taskId")
+                },
+                onAddClick = {
+                    navController.navigate("add_task/$date")
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(Screen.AddTask.route) { backStackEntry ->
+            val date = backStackEntry.arguments?.getString("date") ?: ""
+
+            val customRecurrenceCallback = remember {
+                { selectedFrequency: com.example.finalproject.Tasks.model.RepeatFrequency ->
+                    val route = "custom_recurrence/${selectedFrequency.name}"
+                    navController.popBackStack("custom_recurrence/{frequency}", inclusive = true)
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
+                }
+            }
+
+            AddTaskScreen(
+                date = date,
+                onCancel = { navController.popBackStack() },
+                onSave = { newTask ->
+                    // Task series management is now handled directly in AddTaskScreen
+                    navController.popBackStack()
+                },
+                onCustomRecurrence = customRecurrenceCallback,
+                calendarViewModel = calendarViewModel
+            )
+        }
+
+        composable(Screen.TaskDetail.route) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+            val task = calendarViewModel.tasks.find { it.id == taskId }
+            if (task != null) {
+                TaskDetailScreen(
+                    task = task,
+                    onClose = { navController.popBackStack() },
+                    onEdit = { taskToEdit ->
+                        navController.navigate("edit_task/${taskToEdit.id}")
+                    },
+                    onDelete = { deletedTask ->
+                        calendarViewModel.deleteTask(deletedTask)
+                        navController.popBackStack()
+                    },
+                    onToggleState = { toggledTask ->
+                        calendarViewModel.toggleTaskState(toggledTask)
+                    }
+                )
+            } else {
+
+            }
+        }
+
+        composable(Screen.EditTask.route) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+            val task = calendarViewModel.tasks.find { it.id == taskId }
+            if (task != null) {
+                val customRecurrenceCallback = remember {
+                    { selectedFrequency: com.example.finalproject.Tasks.model.RepeatFrequency ->
+                        navController.navigate("custom_recurrence/${selectedFrequency.name}")
+                    }
+                }
+
+                EditTaskScreen(
+                    task = task,
+                    onCancel = { navController.popBackStack() },
+                    onSave = { editedTask ->
+                        // Task series management is now handled directly in EditTaskScreen
+                        navController.popBackStack()
+                    },
+                    onCustomRecurrence = customRecurrenceCallback,
+                    calendarViewModel = calendarViewModel
+                )
+            } else {
+                // fallback UI if task not found
+                navController.popBackStack()
+            }
+        }
+
+        composable(
+            route = "custom_recurrence/{frequency}",
+            arguments = listOf(navArgument("frequency") {
+                type = NavType.StringType
+                defaultValue = "NONE"
+            })
+        ) { backStackEntry ->
+            val freqName = backStackEntry.arguments?.getString("frequency") ?: "NONE"
+            val initialFrequency = try {
+                com.example.finalproject.Tasks.model.RepeatFrequency.valueOf(freqName)
+            } catch (e: Exception) {
+                com.example.finalproject.Tasks.model.RepeatFrequency.NONE
+            }
+
+            val draftTask = calendarViewModel.draftTask
+            val currentRepeatEnd =
+                draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
+
+
+            CustomRecurrenceScreen(
+                initialFrequency = initialFrequency,
+                initialMonthlyPattern = null,
+                initialRepeatEnd = currentRepeatEnd,
+                onDone = { freq, monthlyPattern, repeatEnd ->
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
+                calendarViewModel = calendarViewModel,
+                onNavigateToEnds = {
+                    navController.navigate(Screen.Ends.route)
+                }
+            )
+        }
+        composable(Screen.Ends.route) {
+            val draftTask = calendarViewModel.draftTask
+            val currentRepeatEnd =
+                draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never
+
+            EndsScreen(
+                initialRepeatEnd = currentRepeatEnd,
+                onDone = { repeatEnd ->
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
+                calendarViewModel = calendarViewModel
+            )
+        }
+
+        composable(Screen.Study.route) {
+            StudyScreen(navController = navController)
+        }
+        composable(Screen.Pomodoro.route) {
+            PomodoroScreen(navController)
+        }
+
+
+
+
+
+        composable(Screen.Review.route) {
+            // supply your DI repo here; replace FakeReviewRepository with real one when ready
+            val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
+                repo = com.example.finalproject.review.data.FakeReviewRepository()
+            )
+            com.example.finalproject.review.ui.ReviewRoute(
+                onBack = { navController.popBackStack() },
+                onCreateQuiz = { /* nav to create quiz */ },
+                onFindFriends = { /* nav to friends */ },
+                factory = factory
+            )
+        }
+
+
+        // Choose Source (AI path)
+        composable(Screen.CreateQuizChoose.route) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+            }
+            val createQuizVm: CreateQuizViewModel = viewModel(
+                parentEntry,
+                factory = CreateQuizViewModelFactory(CreateQuizRepository(apiHolder.quizApi))
+            )
+            com.example.finalproject.createquiz.ui.ChooseSourceScreen(
+                nav = navController,
+                vm = createQuizVm
+            )
+        }
+
+        composable(Screen.CreateQuizManual.route) {
+            val vm: ManualQuizViewModel = viewModel()
+            com.example.finalproject.createquiz.ui.ManualQuizScreen(
+                viewModel = vm,
+                onFinish = {
+                    navController.navigate("create_quiz/success?quizId=manual_dev") {
+                        popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+
+        composable(
+            Screen.CreateQuizSuccess.route,
+            arguments = listOf(navArgument("quizId") {
+                type = NavType.StringType
+                defaultValue = ""
+            })
+        ) {
+            com.example.finalproject.createquiz.ui.SuccessScreen(
+                nav = navController,
+                onGetThere = { navController.navigate(Screen.Study.route) },
+                onBackToMenu = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Quiz.route) {
+            val quizViewModel: QuizViewModel = viewModel(
+                factory = QuizViewModelFactory(QuizRepository(apiHolder.quizApi))
+            )
+            QuizMainScreen(
+                viewModel = quizViewModel
+            )
+        }
+
     }
-
-
 }
+

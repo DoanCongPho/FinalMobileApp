@@ -60,12 +60,12 @@ fun QuizDetailScreen(
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "Created: ${quiz.created_at.toLocalDate()}",
+                        text = "Created: ${quiz.createdAt}",
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Text(
-                        text = "Last Updated: ${quiz.updated_at.toLocalDate()}",
+                        text = "Last Updated: ${quiz.updatedAt}",
                         fontSize = 14.sp
                     )
                 }

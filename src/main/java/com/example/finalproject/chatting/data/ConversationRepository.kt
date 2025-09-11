@@ -15,10 +15,6 @@ class ConversationRepository(private val api: ConversationApi) {
         return api.getMyConversations()
     }
 
-//    suspend fun createConversation(recipientId: Int): Conversation {
-//        val request = CreateConversationRequest(recipient_id = recipientId)
-//        return api.createConversation(request)
-//    }
 
     suspend fun createDirectConversation(recipientId: Int): Conversation {
         val request = CreateConversationRequest(

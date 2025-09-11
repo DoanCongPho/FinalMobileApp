@@ -28,6 +28,7 @@ import com.example.finalproject.journey.model.Quiz
 import com.example.finalproject.journey.viewmodel.QuizViewModel
 import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 enum class FilterPeriod {
@@ -39,7 +40,7 @@ enum class FilterPeriod {
 fun QuizListScreen(
     onQuizClick: (Quiz) -> Unit,
     onSwitchToStats: () -> Unit,
-    viewModel: QuizViewModel = viewModel(factory = QuizViewModelFactory(QuizRepository()))
+    viewModel: QuizViewModel
 ) {
     val quizzes by viewModel.quizzes
     val isLoading by viewModel.isLoading
@@ -311,7 +312,7 @@ fun QuizItem(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = "Created: ${quiz.created_at.toLocalDate()}",
+                text = "Created: ${quiz.createdAt}",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -320,26 +321,24 @@ fun QuizItem(
 }
 
 fun filterQuizzesByPeriod(quizzes: List<Quiz>, period: FilterPeriod): List<Quiz> {
-    if (period == FilterPeriod.ALL) {
-        return quizzes
-    }
-    
+    if (period == FilterPeriod.ALL) return quizzes
+
     val now = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ISO_DATE_TIME
+
     return quizzes.filter { quiz ->
+        val createdAt = try {
+            LocalDateTime.parse(quiz.createdAt, formatter)
+        } catch (e: Exception) {
+            return@filter false
+        }
+
         when (period) {
-            FilterPeriod.DAILY -> {
-                ChronoUnit.DAYS.between(quiz.created_at, now) < 1
-            }
-            FilterPeriod.WEEKLY -> {
-                ChronoUnit.DAYS.between(quiz.created_at, now) < 7
-            }
-            FilterPeriod.MONTHLY -> {
-                ChronoUnit.DAYS.between(quiz.created_at, now) < 30
-            }
-            FilterPeriod.YEARLY -> {
-                ChronoUnit.DAYS.between(quiz.created_at, now) < 365
-            }
-            FilterPeriod.ALL -> true // This case is handled above
+            FilterPeriod.DAILY -> ChronoUnit.DAYS.between(createdAt, now) < 1
+            FilterPeriod.WEEKLY -> ChronoUnit.DAYS.between(createdAt, now) < 7
+            FilterPeriod.MONTHLY -> ChronoUnit.DAYS.between(createdAt, now) < 30
+            FilterPeriod.YEARLY -> ChronoUnit.DAYS.between(createdAt, now) < 365
+            FilterPeriod.ALL -> true
         }
     }
 }
