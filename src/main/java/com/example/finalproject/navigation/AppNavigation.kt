@@ -17,6 +17,7 @@ import com.example.finalproject.auth.register.ui.SuccessRegistrationScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModelFactory
 import com.example.finalproject.core.DataStore.TokenManager
+import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.main.ui.MainScreen
 
 sealed class Screen(val route: String) {
@@ -30,11 +31,14 @@ sealed class Screen(val route: String) {
     object Account: Screen("account")
     object Month: Screen("month")
     object Main: Screen("main")
+    object NewMessage: Screen("newMessage")
+    object CreateGroup: Screen("createGroup")
 }
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
-    val tokenManager = TokenManager(context)
+    val tokenManager = TokenManager.getInstance(context)
+    val apiHolder = ApiClient.create(tokenManager)
 
     NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
@@ -45,7 +49,7 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Register.route) {
-            val vm: RegisterViewModel = viewModel(factory = RegisterViewModelFactory(RegisterRepository()))
+            val vm: RegisterViewModel = viewModel(factory = RegisterViewModelFactory(RegisterRepository(apiHolder)))
             RegisterScreen(
                 vm = vm,
                 onFinish = { navController.navigate(Screen.SuccessRegister.route)},
@@ -64,7 +68,7 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Login.route){
-            val vm: LoginViewModel = viewModel(factory = LoginViewModelFactory(LoginRepository(), tokenManager))
+            val vm: LoginViewModel = viewModel(factory = LoginViewModelFactory(LoginRepository(apiHolder), tokenManager))
             LoginScreen(
                 vm = vm,
                 onBack = { navController.popBackStack() },
