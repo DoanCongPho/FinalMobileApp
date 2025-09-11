@@ -39,8 +39,6 @@ import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.study.ui.StudyScreen
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
-import com.example.finalproject.createquiz.data.CreateQuizRepository
-import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
 import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.core.network.TokenProvider
@@ -48,9 +46,12 @@ import androidx.navigation.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
+<<<<<<< HEAD
 
+=======
 import com.example.finalproject.createquiz.data.CreateQuizRepository
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+>>>>>>> b3c7c3f35a63ae79689cdd57db51ec5142d965cf
 
 
 sealed class Screen(val route: String) {
@@ -88,14 +89,6 @@ fun AppNavigation(navController: NavHostController) {
     )
     val context = LocalContext.current
     val tokenManager = TokenManager(context)
-    class CreateQuizViewModelFactory(
-        private val repo: CreateQuizRepository
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return CreateQuizViewModel(repo) as T
-        }
-    }
 
     // Set up token provider for API calls
     LaunchedEffect(Unit) {
@@ -103,7 +96,6 @@ fun AppNavigation(navController: NavHostController) {
         ApiClient.setTokenProvider { tokenProvider.getToken() }
     }
 
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
     NavHost(navController = navController, startDestination = Screen.Authen.route) {
         composable(Screen.Authen.route) {
             AuthenPage (
@@ -141,7 +133,6 @@ fun AppNavigation(navController: NavHostController) {
                 vm = vm,
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    navController.navigate(Screen.Month.route) {
                     navController.navigate(Screen.Quiz.route) {
                         popUpTo(Screen.Authen.route) { inclusive = true }
                     }
@@ -325,28 +316,21 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Review.route) {
+            // supply your DI repo here; replace FakeReviewRepository with real one when ready
             val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
                 repo = com.example.finalproject.review.data.FakeReviewRepository()
             )
             com.example.finalproject.review.ui.ReviewRoute(
                 onBack = { navController.popBackStack() },
-                onCreateQuiz = { navController.navigate(Screen.CreateQuizRoot.route) },
+                onCreateQuiz = { /* nav to create quiz */ },
                 onFindFriends = { /* nav to friends */ },
                 factory = factory
             )
         }
-        navigation(
-            startDestination = Screen.CreateQuizMode.route, // now starts at mode screen
-            route = Screen.CreateQuizRoot.route
-        ) {
-            // Mode screen
-            composable(Screen.CreateQuizMode.route) {
-                com.example.finalproject.createquiz.ui.ChooseModeScreen(
-                    onCreateByAI = { navController.navigate(Screen.CreateQuizChoose.route) },
-                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) }
-                )
-            }
 
+        composable(Screen.Quiz.route) {
+            QuizMainScreen()
+        }
             // Choose Source (AI path)
             composable(Screen.CreateQuizChoose.route) { backStackEntry ->
                 val parentEntry = remember(backStackEntry) {
@@ -387,6 +371,7 @@ fun AppNavigation(navController: NavHostController) {
                     onBackToMenu = { navController.popBackStack() }
                 )
             }
-        }
+        
+
     }
 }
