@@ -13,12 +13,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.finalproject.chatting.model.Conversation
 import com.example.finalproject.chatting.model.User
-import com.example.finalproject.chatting.viewmodel.AddConversationViewModel
+import com.example.finalproject.chatting.viewmodel.AddConversationChatRoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddConversationScreen(
-    viewModel: AddConversationViewModel,
+    viewModel: AddConversationChatRoomViewModel,
     navController: NavController,
     onConversationCreated: (Conversation) -> Unit
 ) {
@@ -138,7 +138,7 @@ fun AddConversationScreen(
                 Button(
 
                     onClick = {
-                        viewModel.createGroupConversation(
+                        viewModel.createGroupChat (
                             groupName,
                             participants.map { it.id }) { convo ->
                             onConversationCreated(convo) // navigate to group chat
@@ -154,7 +154,7 @@ fun AddConversationScreen(
             } else if (participants.size == 1) {
                 Button(
                     onClick = {
-                        viewModel.createDirectConversation { convo ->
+                        viewModel.createDirectChat { convo ->
                             onConversationCreated(convo)
                         }
                     },

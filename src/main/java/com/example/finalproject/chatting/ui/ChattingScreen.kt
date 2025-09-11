@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -23,85 +24,65 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.finalproject.chatting.model.Conversation
 import com.example.finalproject.chatting.model.Message
+import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
 import com.example.finalproject.chatting.viewmodel.ConversationViewModel
 import com.example.finalproject.core.DataStore.TokenManager
 import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(
-    conversationViewModel: ConversationViewModel = viewModel(),
+    chatRoomManager: ChatRoomManagerViewModel = viewModel(),
     tokenManager: TokenManager,
     onConversationClick: (Int, String) -> Unit,
-    onNewMessageClick: () -> Unit,   // callback khi bấm nút tạo tin nhắn
-    onCreateGroupClick: () -> Unit   // callback khi bấm nút tạo nhóm
+    onNewMessageClick: () -> Unit,
+    onCreateGroupClick: () -> Unit
 ) {
-    val conversations by conversationViewModel.conversations.collectAsState()
+    val conversations by chatRoomManager.conversations.collectAsState()
     val currentUserId by tokenManager.userId.collectAsState(initial = null)
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Top bar
+        // Top bar chứa 2 callback
         CenterAlignedTopAppBar(
-            title = { Text("Chat", style = MaterialTheme.typography.titleLarge) },
+            title = { Text("Chat") },
             navigationIcon = {
-                IconButton(onClick = { onNewMessageClick() }) {
+                IconButton(onClick = onNewMessageClick) {
                     Icon(Icons.Default.Add, contentDescription = "New Message")
                 }
             },
             actions = {
-                IconButton(onClick = { onCreateGroupClick() }) {
+                IconButton(onClick = onCreateGroupClick) {
                     Icon(Icons.Default.GroupAdd, contentDescription = "Create Group")
                 }
             }
         )
 
-        // Chat list
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp)
-
-        ) {
+        // Danh sách chat
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(conversations) { convo ->
-                val messages by conversationViewModel.getMessagesFor(convo.id).collectAsState(initial = emptyList())
+                val messages by chatRoomManager.getMessagesFor(convo.id).collectAsState(initial = emptyList())
                 val lastMessage = messages.firstOrNull()
-
-                val displayName = convo.name
-                    ?: convo.participants.firstOrNull { it.user.id != currentUserId }?.user?.name
-                    ?: "Unnamed Conversation"
-
-                val lastMessageText = lastMessage?.let { message ->
-                    val senderName = convo.participants.firstOrNull { it.user.id == message.userId }?.user?.name
-                        ?: "Unknown"
-                    "$senderName: ${message.content}"
+                val displayName = convo.name ?: convo.participants.firstOrNull { it.user.id != currentUserId }?.user?.name ?: "Unnamed"
+                val lastMessageText = lastMessage?.let {
+                    val senderName = convo.participants.firstOrNull { p -> p.user.id == it.userId }?.user?.name ?: "Unknown"
+                    "$senderName: ${it.content}"
                 } ?: ""
-
-                val lastMessageTimeText = lastMessage?.createdAt ?: convo.createdAt
-                val formattedDate = try {
-                    OffsetDateTime.parse(lastMessageTimeText)
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                } catch (_: Exception) {
-                    lastMessageTimeText.take(10)
-                }
+                val lastMessageTime = lastMessage?.createdAt?.take(10) ?: convo.createdAt.take(10)
 
                 ChatListItem(
                     displayName = displayName,
                     lastMessage = lastMessageText,
-                    lastMessageTime = formattedDate,
+                    lastMessageTime = lastMessageTime,
                     onClick = { onConversationClick(convo.id, displayName) }
                 )
-
-                Divider()
             }
         }
     }
 }
+
 
 @Composable
 fun ChatListItem(
@@ -150,20 +131,24 @@ fun ChatListItem(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     displayName: String,
     chatId: Int,
-    conversationViewModel: ConversationViewModel = viewModel(),
+    chatRoomManager: ChatRoomManagerViewModel = viewModel(),
     tokenManager: TokenManager,
     navController: NavController
 ) {
-    val messages by conversationViewModel.getMessagesFor(chatId).collectAsState()
+    val messages by chatRoomManager.getMessagesFor(chatId).collectAsState()
     val currentUserId by tokenManager.userId.collectAsState(initial = null)
     var inputText by remember { mutableStateOf("") }
 
-
+    val listState = rememberLazyListState()
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(0)
+    }
 
     Scaffold(
         topBar = {
@@ -182,7 +167,7 @@ fun ChatScreen(
                 onMessageChange = { inputText = it },
                 onSend = {
                     if (inputText.isNotBlank()) {
-                        conversationViewModel.sendMessage(chatId, inputText)
+                        chatRoomManager.sendMessage(chatId, inputText)
                         inputText = ""
                     }
                 }
@@ -190,9 +175,8 @@ fun ChatScreen(
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(padding),
             reverseLayout = true
         ) {
             items(messages) { message ->
@@ -210,10 +194,7 @@ fun ChatInputBar(
     onSend: () -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFFF5F5F5))
-            .padding(8.dp),
+        modifier = Modifier.fillMaxWidth().background(Color(0xFFF5F5F5)).padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = { }) { Icon(Icons.Default.Add, contentDescription = "Add") }
@@ -224,7 +205,7 @@ fun ChatInputBar(
             placeholder = { Text("Message") },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(50),
-            singleLine = false,        // allow spaces and multiline
+            singleLine = false,
             maxLines = 4,
             colors = TextFieldDefaults.textFieldColors(
                 containerColor = Color.White,
@@ -251,45 +232,26 @@ fun ChatInputBar(
 fun ChatMessageItem(message: Message, currentUserId: Int?) {
     val isMe = message.userId == currentUserId
     val timeText = try {
-        // Nếu createdAt là ISO string nhưng không có timezone
-        val ldt = java.time.LocalDateTime.parse(message.createdAt)
-        ldt.format(DateTimeFormatter.ofPattern("HH:mm"))
+        java.time.LocalDateTime.parse(message.createdAt)
+            .format(DateTimeFormatter.ofPattern("HH:mm"))
     } catch (_: Exception) {
-        // fallback: nếu createdAt là epoch millis
         try {
-            val date = Date(message.createdAt.toLong())
-            SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-        } catch (_: Exception) {
-            ""
-        }
+            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.createdAt.toLong()))
+        } catch (_: Exception) { "" }
     }
 
-
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
         horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
     ) {
         Column(
-            modifier = Modifier
-                .background(
-                    color = if (isMe) Color(0xFFDCF8C6) else Color.White,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(8.dp)
+            modifier = Modifier.background(
+                color = if (isMe) Color(0xFFDCF8C6) else Color.White,
+                shape = RoundedCornerShape(12.dp)
+            ).padding(8.dp)
         ) {
-            Text(
-                text = message.content.orEmpty(), // nếu null thì chuyển thành ""
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-               timeText,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                modifier = Modifier.align(Alignment.End)
-            )
+            Text(text = message.content.orEmpty(), style = MaterialTheme.typography.bodyMedium)
+            Text(timeText, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.align(Alignment.End))
         }
     }
 }

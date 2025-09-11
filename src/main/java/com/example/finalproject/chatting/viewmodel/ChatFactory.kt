@@ -5,8 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.finalproject.chatting.data.ConversationRepository
 import com.example.finalproject.chatting.data.MessageRepository
 import com.example.finalproject.chatting.data.UserRepository
-
-
+import com.example.finalproject.core.DataStore.TokenManager
 
 
 class ConversationViewModelFactory(
@@ -26,16 +25,30 @@ class ConversationViewModelFactory(
 
 
 
-
-class AddConversationViewModelFactory(
+class AddConversationChatRoomViewModelFactory(
     private val userRepo: UserRepository,
-    private val conversationViewModel: ConversationViewModel
+    private val chatRoomManager: ChatRoomManagerViewModel
 ) : ViewModelProvider.Factory {
-
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(AddConversationViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(AddConversationChatRoomViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return AddConversationViewModel(userRepo, conversationViewModel) as T
+            return AddConversationChatRoomViewModel(userRepo, chatRoomManager) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+
+
+class ChatRoomManagerViewModelFactory(
+    private val conversationRepo: ConversationRepository,
+    private val messageRepo: MessageRepository,
+    private val tokenManager: TokenManager
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ChatRoomManagerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ChatRoomManagerViewModel(conversationRepo, messageRepo, tokenManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

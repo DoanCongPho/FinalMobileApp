@@ -24,14 +24,14 @@ import com.example.finalproject.chatting.data.ConversationRepository
 import com.example.finalproject.chatting.data.MessageRepository
 import com.example.finalproject.chatting.data.UserRepository
 import com.example.finalproject.chatting.ui.AddConversationScreen
-import com.example.finalproject.chatting.viewmodel.AddConversationViewModel
-import com.example.finalproject.chatting.viewmodel.AddConversationViewModelFactory
+import com.example.finalproject.chatting.viewmodel.AddConversationChatRoomViewModelFactory
+import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
+import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFactory
 import com.example.finalproject.chatting.viewmodel.ConversationViewModel
 import com.example.finalproject.chatting.viewmodel.ConversationViewModelFactory
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
 import java.time.LocalDate
-
 
 
 @Composable
@@ -45,6 +45,13 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val conversationViewModel: ConversationViewModel = viewModel(
         factory = ConversationViewModelFactory(conversationRepo, messageRepo)
     )
+    val chatRoomManager: ChatRoomManagerViewModel = viewModel(
+        factory = ChatRoomManagerViewModelFactory(
+            conversationRepo,
+            messageRepo,
+            tokenManager
+        )
+    )
     NavHost(
         navController = navController,
         startDestination = Screen.Chat.route,
@@ -56,7 +63,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
 
         composable(Screen.Chat.route) {
             ChatListScreen(
-                conversationViewModel = conversationViewModel,
+                chatRoomManager = chatRoomManager,
                 tokenManager,
                 onConversationClick = { conversationId, displayName ->
                     navController.navigate("chatScreen/$conversationId/$displayName")
@@ -77,7 +84,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         }
 
         composable(Screen.Calendar.route) {
-            val vm: CalendarViewModel = viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
+            val vm: CalendarViewModel =
+                viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
             CalendarScreen(
                 viewModel = vm,
                 onNavigateToStudy = { navController.navigate(Screen.Study.route) },
@@ -112,30 +120,32 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         ) { backStackEntry ->
             val chatId = backStackEntry.arguments?.getInt("chatId") ?: 0
             val displayName = backStackEntry.arguments?.getString("displayName") ?: "Chat"
+
+            // Tạo ChatRoomManagerViewModel một lần
+
+
             ChatScreen(
                 chatId = chatId,
                 displayName = displayName,
                 navController = navController,
-                conversationViewModel = viewModel(
-                    factory = ConversationViewModelFactory(
-                        ConversationRepository(apiHolder.conversationApi),
-                        MessageRepository(apiHolder.messageApi)
-                    )
-                ),
+                chatRoomManager = chatRoomManager,
                 tokenManager = tokenManager
             )
         }
 
+
         composable(Screen.NewMessage.route) {
             val userRepo = UserRepository(apiHolder.userApi)
 
+
             AddConversationScreen(
                 viewModel = viewModel(
-                    factory = AddConversationViewModelFactory(userRepo, conversationViewModel)
+                    factory = AddConversationChatRoomViewModelFactory(userRepo, chatRoomManager)
                 ),
                 navController = navController, // <-- pass navController
                 onConversationCreated = { convo ->
                     // Navigate to chat screen after creation
+
                     navController.navigate("chatScreen/${convo.id}/${convo.name ?: "Chat"}") {
                         popUpTo(Screen.Chat.route) { inclusive = false }
                     }
@@ -143,9 +153,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             )
         }
 
-
-
-
-
     }
+
+
 }

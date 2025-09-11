@@ -9,15 +9,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class AddConversationViewModel(
+class AddConversationChatRoomViewModel(
     private val userRepo: UserRepository,
-    private val conversationViewModel: ConversationViewModel
+    private val chatRoomManager: ChatRoomManagerViewModel
 ) : ViewModel() {
 
     private val _recipientId = MutableStateFlow<Int?>(null)
     val recipientId: StateFlow<Int?> = _recipientId
 
-    private val _foundUser = MutableStateFlow<User?>(null) // store user info
+    private val _foundUser = MutableStateFlow<User?>(null)
     val foundUser: StateFlow<User?> = _foundUser
 
     private val _error = MutableStateFlow<String?>(null)
@@ -25,7 +25,6 @@ class AddConversationViewModel(
 
     private val _info = MutableStateFlow<String?>(null)
     val info: StateFlow<String?> = _info
-
 
     fun findUser(username: String) {
         viewModelScope.launch {
@@ -43,32 +42,19 @@ class AddConversationViewModel(
         }
     }
 
-//    fun createConversation(onCreated: (Conversation) -> Unit = {}) {
-//        val id = _recipientId.value ?: run {
-//            _error.value = "No recipient selected"
-//            return
-//        }
-//
-//        // Delegate creation to the main ConversationViewModel
-//        conversationViewModel.createConversation(id) { convo ->
-//            onCreated(convo) // callback for navigation or updating UI
-//        }
-//    }
-
-    fun createDirectConversation(onCreated: (Conversation) -> Unit) {
+    fun createDirectChat(onCreated: (Conversation) -> Unit) {
         val user = _foundUser.value
         if (user == null) {
             _error.value = "No recipient selected"
             return
         }
-
-        // Delegate to ConversationViewModel with callback
-        conversationViewModel.createDirectConversation(user.id) { convo ->
-            onCreated(convo)   // navigate to the conversation screen
+        // Use ChatRoomManagerViewModel to create a conversation
+        chatRoomManager.createDirectConversation(user.id) { convo ->
+            onCreated(convo)
         }
     }
 
-    fun createGroupConversation(
+    fun createGroupChat(
         name: String,
         participantIds: List<Int>,
         description: String? = null,
@@ -78,10 +64,8 @@ class AddConversationViewModel(
             _error.value = "Group name is required"
             return
         }
-
-        conversationViewModel.createGroupConversation(name, participantIds, description) { convo ->
-            onCreated(convo)  // navigate to the new group conversation
+        chatRoomManager.createGroupConversation(name, participantIds, description) { convo ->
+            onCreated(convo)
         }
     }
-
 }
