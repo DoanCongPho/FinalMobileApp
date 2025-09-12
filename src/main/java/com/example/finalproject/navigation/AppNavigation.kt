@@ -39,8 +39,6 @@ import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.core.network.TokenProvider
 import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
-
-
 import com.example.finalproject.createquiz.data.CreateQuizRepository
 import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
@@ -64,7 +62,6 @@ sealed class Screen(val route: String) {
     object CustomRecurrence : Screen("custom_recurrence/{frequency}")
     object Ends : Screen("ends")
     object Month: Screen("month")
-    object Day: Screen("day")
     object Pomodoro: Screen("pomodoro")
     object Review: Screen ("review")
     object Quiz: Screen("quiz")
@@ -82,16 +79,13 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
-    val tokenManager = TokenManager(context)
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Month.route) {
     NavHost(navController = navController, startDestination = Screen.Authen.route) {
         composable(Screen.Authen.route) {
-            AuthenPage (
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) }
@@ -106,7 +100,6 @@ fun AppNavigation(navController: NavHostController) {
                 viewModel(factory = RegisterViewModelFactory(RegisterRepository(apiHolder)))
             RegisterScreen(
                 vm = vm,
-                onFinish = { navController.navigate(Screen.Authen.route) },
                 onFinish = { navController.navigate(Screen.SuccessRegister.route) },
                 onBackPressed = { navController.popBackStack() }
             )
@@ -122,10 +115,6 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
-        composable(Screen.Login.route){
-            val vm: LoginViewModel = viewModel(
-                factory = LoginViewModelFactory(LoginRepository(), tokenManager)
-            )
         composable(Screen.Login.route) {
             val vm: LoginViewModel =
                 viewModel(factory = LoginViewModelFactory(LoginRepository(apiHolder), tokenManager))
@@ -133,7 +122,6 @@ fun AppNavigation(navController: NavHostController) {
                 vm = vm,
                 onBack = { navController.popBackStack() },
                 onLoginSuccess = {
-                    navController.navigate(Screen.Month.route) {
 //                    navController.navigate(Screen.Quiz.route) {
                     navController.navigate("main") {
                         popUpTo(Screen.Authen.route) { inclusive = true }
