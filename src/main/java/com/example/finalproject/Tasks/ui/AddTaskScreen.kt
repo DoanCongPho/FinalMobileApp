@@ -76,6 +76,8 @@ fun AddTaskScreen(
             date = taskDate,
             time = if (isAllDay) null else time,
             repeatFrequency = repeat,
+            repeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never,
+            monthlyPattern = draftTask?.monthlyPattern,
             tag = tag
         )
     }
@@ -86,6 +88,42 @@ fun AddTaskScreen(
             calendarViewModel.saveDraftTask(createCurrentDraft())
         }
     }
+    
+//    // Save draft whenever repeatEnd or monthlyPattern changes (updated from other screens)
+//    LaunchedEffect(draftTask?.repeatEnd, draftTask?.monthlyPattern) {
+//        if (title.isNotBlank() || details.isNotBlank() || tag.isNotBlank()) {
+//            calendarViewModel.saveDraftTask(createCurrentDraft())
+//        }
+//    }
+    
+//    // Update local state when draftTask changes (e.g., when returning from CustomRecurrenceScreen/EndsScreen)
+//    LaunchedEffect(calendarViewModel.draftTask) {
+//        calendarViewModel.draftTask?.let { updatedDraft ->
+//            // Update repeat frequency if it has changed
+//            if (updatedDraft.repeatFrequency != repeat) {
+//                repeat = updatedDraft.repeatFrequency
+//            }
+//            // Update other fields if they have changed
+//            if (updatedDraft.title != title) {
+//                title = updatedDraft.title
+//            }
+//            if (updatedDraft.details != details) {
+//                details = updatedDraft.details ?: ""
+//            }
+//            if (updatedDraft.isAllDay != isAllDay) {
+//                isAllDay = updatedDraft.isAllDay
+//            }
+//            if (updatedDraft.date != taskDate) {
+//                taskDate = updatedDraft.date
+//            }
+//            if (updatedDraft.time != time) {
+//                time = updatedDraft.time ?: nowTime
+//            }
+//            if (updatedDraft.tag != tag) {
+//                tag = updatedDraft.tag ?: ""
+//            }
+//        }
+//    }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF232326))) {
         // Navigation to CustomRecurrenceScreen is now handled by navigation, not local state

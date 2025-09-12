@@ -34,7 +34,13 @@ data class CalendarTask(
     val repeatFrequency: RepeatFrequency = RepeatFrequency.NONE,
     val monthlyPattern: MonthlyPattern? = null,             // Only if frequency is MONTHLY
     val repeatEnd: RepeatEnd = RepeatEnd.Never,
-    val tag: String? = null,
+    val tag: String? = null, // the name of the task list
     val state: Int = 0, // 0 = undone, 1 = done; extensible for future states
-    val seriesId: String? = null // Null if repeatFrequency is NONE, otherwise contains series identifier
+    val seriesId: String? = null, // Null if repeatFrequency is NONE, otherwise contains series identifier
+    val task_list_id: Int = 0 // task list that this task belongs to
+)
+
+data class CalendarTasklist(
+    val task_list_id: Int,
+    val task_list_name: String // equivalent to the field "tag" above
 )

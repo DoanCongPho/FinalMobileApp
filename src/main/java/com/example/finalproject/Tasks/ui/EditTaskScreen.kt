@@ -83,6 +83,40 @@ fun EditTaskScreen(
     LaunchedEffect(title, details, isAllDay, taskDate, time, repeat, tag) {
         calendarViewModel.saveDraftTask(createCurrentDraft())
     }
+    
+    // Save draft whenever repeatEnd or monthlyPattern changes (updated from other screens)
+    LaunchedEffect(draftTask?.repeatEnd, draftTask?.monthlyPattern) {
+        calendarViewModel.saveDraftTask(createCurrentDraft())
+    }
+    
+    // Update local state when draftTask changes (e.g., when returning from CustomRecurrenceScreen/EndsScreen)
+    LaunchedEffect(calendarViewModel.draftTask) {
+        calendarViewModel.draftTask?.let { updatedDraft ->
+            // Update repeat frequency if it has changed
+            if (updatedDraft.repeatFrequency != repeat) {
+                repeat = updatedDraft.repeatFrequency
+            }
+            // Update other fields if they have changed
+            if (updatedDraft.title != title) {
+                title = updatedDraft.title
+            }
+            if (updatedDraft.details != (details.takeIf { it.isNotBlank() })) {
+                details = updatedDraft.details ?: ""
+            }
+            if (updatedDraft.isAllDay != isAllDay) {
+                isAllDay = updatedDraft.isAllDay
+            }
+            if (updatedDraft.date != taskDate) {
+                taskDate = updatedDraft.date
+            }
+            if (updatedDraft.time != time) {
+                time = updatedDraft.time ?: task.time ?: java.time.LocalTime.now().withSecond(0).withNano(0)
+            }
+            if (updatedDraft.tag != (tag.takeIf { it.isNotBlank() })) {
+                tag = updatedDraft.tag ?: ""
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF232326))) {
         // Header
@@ -124,13 +158,22 @@ fun EditTaskScreen(
                         
                         // Check if repeat pattern changed
                         val originalRepeatFrequency = task.repeatFrequency
+                        val originalRepeatEnd = task.repeatEnd
+                        val originalMonthlyPattern = task.monthlyPattern
                         val newRepeatFrequency = repeat
+                        val newRepeatEnd = draftTask?.repeatEnd ?: task.repeatEnd
+                        val newMonthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern
                         
-                        if (originalRepeatFrequency == newRepeatFrequency && newRepeatFrequency != RepeatFrequency.NONE) {
+                        if (originalRepeatFrequency == newRepeatFrequency && 
+                            originalRepeatEnd == newRepeatEnd &&
+                            originalMonthlyPattern == newMonthlyPattern &&
+                            newRepeatFrequency != RepeatFrequency.NONE) {
                             // No repeat pattern changes: Use updateTaskSeries() to update all tasks in series
                             calendarViewModel.updateTaskSeries(editedTask)
-                        } else if (originalRepeatFrequency != newRepeatFrequency) {
-                            // Repeat pattern changes:
+                        } else if (originalRepeatFrequency != newRepeatFrequency ||
+                                   originalRepeatEnd != newRepeatEnd ||
+                                   originalMonthlyPattern != newMonthlyPattern) {
+                            // Repeat pattern changes (frequency, end condition, or monthly pattern):
                             
                             // Save copy of original task before any modifications
                             val originalTaskCopy = task.copy()

@@ -7,6 +7,7 @@ import com.example.finalproject.core.network.api.chat.ConversationApi
 import com.example.finalproject.core.network.api.chat.ConversationMessageApi
 import com.example.finalproject.core.network.api.chat.UserApi
 import com.example.finalproject.core.network.api.quiz.QuizApi
+import com.example.finalproject.core.network.api.tasklist_task.TaskListApi
 import com.example.finalproject.core.network.interceptor.AuthInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -38,7 +39,8 @@ object ApiClient {
             retrofit.create(LoginApi::class.java),
             retrofit.create(ConversationApi::class.java),
             retrofit.create(UserApi::class.java),
-            retrofit.create(ConversationMessageApi::class.java)
+            retrofit.create(ConversationMessageApi::class.java),
+            retrofit.create(TaskListApi::class.java)
         )
     }
 
@@ -48,6 +50,9 @@ object ApiClient {
         val loginApi: LoginApi,
         val conversationApi: ConversationApi,
         val userApi: UserApi,
-        val messageApi: ConversationMessageApi
+        val messageApi: ConversationMessageApi,
+        val taskListApi: TaskListApi
     )
 }
+
+

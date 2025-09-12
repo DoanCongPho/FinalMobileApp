@@ -240,45 +240,6 @@ fun DailyScheduleScreen(
             )
         }
 
-        // Navigation bar at the bottom
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-                .align(Alignment.BottomCenter)
-                .offset(y = (-45).dp)
-                .background(Color(0xFFF0F0F0)),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val buttons = listOf("calendar", "study", "chat", "account")
-            buttons.forEach { name ->
-                val isSelected = name == selectedButton
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.Transparent,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            selectedButton = name
-                            // TODO: Handle navigation click
-                        }
-                ) {
-                    val imageName = if (isSelected) "${name}_button_hover" else "${name}_button"
-                    Image(
-                        painter = painterResource(
-                            id = getDrawableId(imageName)
-                        ),
-                        contentDescription = "$name navigation button",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
-        }
         }
     }
 }

@@ -2,9 +2,14 @@ package com.example.finalproject.calendar.data
 
 import androidx.compose.runtime.mutableStateListOf
 import com.example.finalproject.Tasks.model.CalendarTask
+import com.example.finalproject.Tasks.model.CalendarTasklist
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.model.RepeatEnd
 import com.example.finalproject.Tasks.model.MonthlyPattern
+import com.example.finalproject.core.network.api.tasklist_task.TaskListApi
+import com.example.finalproject.core.network.api.tasklist_task.TaskListRequest
+import com.example.finalproject.core.network.api.tasklist_task.TaskListResponse
+import android.util.Log
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.DayOfWeek
@@ -14,8 +19,17 @@ import java.util.UUID
 // Repository (singleton)
 object CalendarRepository1 {
     private val tasks = mutableStateListOf<CalendarTask>()
+    private val taskLists = mutableStateListOf<CalendarTasklist>()
+    
+    private var taskListApi: TaskListApi? = null
 
     fun getTasks() = tasks
+    fun getTaskLists() = taskLists
+    
+    // Initialize the API instance
+    fun setTaskListApi(api: TaskListApi) {
+        taskListApi = api
+    }
 
     fun addTask(task: CalendarTask) {
         tasks.add(task)
@@ -279,6 +293,181 @@ object CalendarRepository1 {
 //                )
             )
         )
+    }
+    
+    // ==============================================
+    // TASK LISTS MANAGEMENT
+    // ==============================================
+    
+    // ===== LOCAL DATA MANAGEMENT FUNCTIONS =====
+    
+    private fun addTaskListLocal(taskList: CalendarTasklist) {
+        taskLists.add(taskList)
+    }
+    
+    private fun removeTaskListLocal(taskListId: Int) {
+        taskLists.removeAll { it.task_list_id == taskListId }
+    }
+    
+    private fun updateTaskListLocal(updatedTaskList: CalendarTasklist) {
+        val index = taskLists.indexOfFirst { it.task_list_id == updatedTaskList.task_list_id }
+        if (index != -1) {
+            taskLists[index] = updatedTaskList
+        }
+    }
+    
+    private fun setTaskListsLocal(taskListsFromApi: List<CalendarTasklist>) {
+        taskLists.clear()
+        taskLists.addAll(taskListsFromApi)
+    }
+    
+    // ===== API INTERACTION FUNCTIONS =====
+    
+    private suspend fun getUserTaskListsFromApi(): List<CalendarTasklist> {
+        return try {
+            val response = taskListApi?.getUserTaskLists()
+            if (response?.isSuccessful == true) {
+                response.body()?.map { apiTaskList ->
+                    CalendarTasklist(
+                        task_list_id = apiTaskList.id,
+                        task_list_name = apiTaskList.name
+                    )
+                } ?: emptyList()
+            } else {
+                Log.e("CalendarRepository1", "Failed to get task lists: ${response?.code()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("CalendarRepository1", "Error getting task lists: ${e.message}")
+            emptyList()
+        }
+    }
+    
+    private suspend fun getTaskListFromApi(taskListId: Int): CalendarTasklist? {
+        return try {
+            val response = taskListApi?.getTaskList(taskListId)
+            if (response?.isSuccessful == true) {
+                response.body()?.let { apiTaskList ->
+                    CalendarTasklist(
+                        task_list_id = apiTaskList.id,
+                        task_list_name = apiTaskList.name
+                    )
+                }
+            } else {
+                Log.e("CalendarRepository1", "Failed to get task list: ${response?.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("CalendarRepository1", "Error getting task list: ${e.message}")
+            null
+        }
+    }
+    
+    private suspend fun createTaskListInApi(name: String): CalendarTasklist? {
+        return try {
+            val request = TaskListRequest(name = name)
+            val response = taskListApi?.createTaskList(request)
+            if (response?.isSuccessful == true) {
+                response.body()?.let { apiTaskList ->
+                    CalendarTasklist(
+                        task_list_id = apiTaskList.id,
+                        task_list_name = apiTaskList.name
+                    )
+                }
+            } else {
+                Log.e("CalendarRepository1", "Failed to create task list: ${response?.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("CalendarRepository1", "Error creating task list: ${e.message}")
+            null
+        }
+    }
+    
+    private suspend fun updateTaskListInApi(taskListId: Int, name: String): CalendarTasklist? {
+        return try {
+            val request = TaskListRequest(name = name)
+            val response = taskListApi?.updateTaskList(taskListId, request)
+            if (response?.isSuccessful == true) {
+                response.body()?.let { apiTaskList ->
+                    CalendarTasklist(
+                        task_list_id = apiTaskList.id,
+                        task_list_name = apiTaskList.name
+                    )
+                }
+            } else {
+                Log.e("CalendarRepository1", "Failed to update task list: ${response?.code()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("CalendarRepository1", "Error updating task list: ${e.message}")
+            null
+        }
+    }
+    
+    private suspend fun deleteTaskListFromApi(taskListId: Int): Boolean {
+        return try {
+            val response = taskListApi?.deleteTaskList(taskListId)
+            if (response?.isSuccessful == true) {
+                true
+            } else {
+                Log.e("CalendarRepository1", "Failed to delete task list: ${response?.code()}")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("CalendarRepository1", "Error deleting task list: ${e.message}")
+            false
+        }
+    }
+    
+    // ===== COMBINED FUNCTIONS (API + LOCAL) =====
+    
+    suspend fun loadTaskListsFromApi() {
+        val taskListsFromApi = getUserTaskListsFromApi()
+        setTaskListsLocal(taskListsFromApi)
+    }
+    
+    suspend fun createTaskList(name: String): Boolean {
+        val createdTaskList = createTaskListInApi(name)
+        return if (createdTaskList != null) {
+            addTaskListLocal(createdTaskList)
+            true
+        } else {
+            false
+        }
+    }
+    
+    suspend fun updateTaskList(taskListId: Int, name: String): Boolean {
+        val updatedTaskList = updateTaskListInApi(taskListId, name)
+        return if (updatedTaskList != null) {
+            updateTaskListLocal(updatedTaskList)
+            true
+        } else {
+            false
+        }
+    }
+    
+    suspend fun deleteTaskList(taskListId: Int): Boolean {
+        val success = deleteTaskListFromApi(taskListId)
+        if (success) {
+            removeTaskListLocal(taskListId)
+        }
+        return success
+    }
+    
+    suspend fun getTaskList(taskListId: Int): CalendarTasklist? {
+        // First try to get from local
+        val localTaskList = taskLists.find { it.task_list_id == taskListId }
+        return if (localTaskList != null) {
+            localTaskList
+        } else {
+            // If not found locally, try to get from API and add to local
+            val apiTaskList = getTaskListFromApi(taskListId)
+            if (apiTaskList != null) {
+                addTaskListLocal(apiTaskList)
+            }
+            apiTaskList
+        }
     }
 }
 

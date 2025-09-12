@@ -92,7 +92,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
 
 
         composable(Screen.Study.route) {
-            // StudyScreen()
+             StudyScreen(navController = navController)
         }
 
         composable(Screen.Account.route) {
