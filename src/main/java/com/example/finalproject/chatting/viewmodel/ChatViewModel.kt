@@ -117,8 +117,18 @@ class ChatRoomManagerViewModel(
                 "CONVERSATION_CREATE", "CONVERSATION_UPDATE" -> {
                     val convo = parseConversation(data)
                     val exists = _conversations.value.any { it.id == convo.id }
-                    if (!exists) _conversations.value = _conversations.value + convo
+                    if (!exists) {
+                        _conversations.value = _conversations.value + convo
+
+                        // ✅ Dùng convo chứ không phải newConvo
+                        val stateFlow = _participantsMap.getOrPut(convo.id) { MutableStateFlow(emptyList()) }
+                        stateFlow.value = convo.participants
+                    } else {
+                        // Nếu đã tồn tại thì update luôn participants cho chắc
+                        _participantsMap[convo.id]?.value = convo.participants
+                    }
                 }
+
                 "CONVERSATION_DELETE" -> {
                     val id = data.getInt("id")
                     _conversations.value = _conversations.value.filter { it.id != id }
@@ -197,8 +207,9 @@ class ChatRoomManagerViewModel(
                     _conversations.value = _conversations.value + newConvo
                 }
 
-                onSuccess(newConvo)
 
+
+                onSuccess(newConvo)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -219,6 +230,9 @@ class ChatRoomManagerViewModel(
                 if (!exists) {
                     _conversations.value = _conversations.value + newConvo
                 }
+
+                val stateFlow = _participantsMap.getOrPut(newConvo.id) { MutableStateFlow(emptyList()) }
+                stateFlow.value = newConvo.participants
 
                 onSuccess(newConvo)
             } catch (e: Exception) {

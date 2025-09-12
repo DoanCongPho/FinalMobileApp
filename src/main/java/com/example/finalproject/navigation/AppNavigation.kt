@@ -19,27 +19,9 @@ import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.ui.SuccessRegistrationScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModelFactory
-import com.example.finalproject.calendar.data.CalendarRepository
-import com.example.finalproject.calendar.data.FakeCalendarApi
-import com.example.finalproject.calendar.viewmodel.CalendarViewModel
-import com.example.finalproject.calendar.viewmodel.CalendarViewModelFactory
-import com.example.finalproject.calendar.ui.CalendarScreen
-import java.time.LocalDate
-import com.example.finalproject.Tasks.ui.DailyScheduleScreen
-import com.example.finalproject.Tasks.ui.AddTaskScreen
-import com.example.finalproject.Tasks.ui.TaskDetailScreen
-import com.example.finalproject.Tasks.ui.EditTaskScreen
-import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
-import com.example.finalproject.Tasks.ui.EndsScreen
-import com.example.finalproject.study.ui.StudyScreen
-import com.example.finalproject.pomodoro.ui.PomodoroScreen
-import com.example.finalproject.journey.ui.QuizMainScreen
+
 import com.example.finalproject.core.network.api.ApiClient
-import com.example.finalproject.core.network.TokenProvider
-import com.example.finalproject.createquiz.viewmodel.ManualQuizViewModel
-import com.example.finalproject.createquiz.data.CreateQuizRepository
-import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
-import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.main.ui.MainScreen
 import com.google.common.base.Defaults.defaultValue
@@ -82,7 +64,7 @@ fun AppNavigation(navController: NavHostController) {
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Main.route) {
+    NavHost(navController = navController, startDestination = Screen.Authen.route) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },

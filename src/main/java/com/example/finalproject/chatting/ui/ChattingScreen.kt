@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.finalproject.chatting.model.Message
@@ -405,18 +404,21 @@ fun ChatScreen(
                                 )
                             }
 
-                            // Button xoá participant
-                            TextButton(
-                                onClick = {
-                                    participantToRemove = p
-                                    showConfirmRemove = true
-                                },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = Color.Red // text color
-                                )
-                            ) {
-                                Text("Remove")
+                            if (p.user.id != currentUserId && currentConversation?.participants?.any { it.user.id == currentUserId && it.role == "admin" } == true) {
+                                TextButton(
+                                    onClick = {
+                                        participantToRemove = p
+                                        showConfirmRemove = true
+                                    },
+                                    colors = ButtonDefaults.textButtonColors(
+                                        contentColor = Color.Red
+                                    )
+                                ) {
+                                    Text("Remove")
+                                }
                             }
+
+
 
                         }
                     }
