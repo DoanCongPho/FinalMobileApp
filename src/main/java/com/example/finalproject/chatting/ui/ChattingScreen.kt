@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.GroupAdd
@@ -212,11 +213,6 @@ fun ChatScreen(
     val conversations by chatRoomManager.conversations.collectAsState() // collect as State
     val currentConversation = conversations.firstOrNull { it.id == chatId }
 
-    val listState = rememberLazyListState()
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(0)
-    }
-
 
 
     val listState = rememberLazyListState()
@@ -253,16 +249,20 @@ fun ChatScreen(
             )
         },
         bottomBar = {
-            ChatInputBar(
-                message = inputText,
-                onMessageChange = { inputText = it },
-                onSend = {
-                    if (inputText.isNotBlank()) {
-                        chatRoomManager.sendMessage(chatId, inputText)
-                        inputText = ""
+            Box(
+                modifier = Modifier.padding(paddingValues = WindowInsets.navigationBars.asPaddingValues())
+            ) {
+                ChatInputBar(
+                    message = inputText,
+                    onMessageChange = { inputText = it },
+                    onSend = {
+                        if (inputText.isNotBlank()) {
+                            chatRoomManager.sendMessage(chatId, inputText)
+                            inputText = ""
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { padding ->
         LazyColumn(

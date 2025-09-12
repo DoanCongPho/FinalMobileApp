@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.model.RepeatEnd
-import com.example.finalproject.Tasks.ui.getDrawableId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -45,8 +44,7 @@ fun AddTaskScreen(
             now
         }
     }
-    
-    // Initialize all state variables from draft or defaults
+
     var taskDate by remember { mutableStateOf(draftTask?.date ?: selectedDate) }
     var time by remember { mutableStateOf(draftTask?.time ?: nowTime) }
     var repeat by remember { mutableStateOf(draftTask?.repeatFrequency ?: RepeatFrequency.NONE) }

@@ -82,7 +82,7 @@ fun AppNavigation(navController: NavHostController) {
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },

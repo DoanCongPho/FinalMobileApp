@@ -36,7 +36,6 @@ import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFactory
 
 import com.example.finalproject.chatting.viewmodel.ConversationViewModel
-import com.example.finalproject.chatting.viewmodel.ConversationViewModelFactory
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.createquiz.data.CreateQuizRepository
@@ -62,9 +61,6 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val messageRepo = MessageRepository(apiHolder.messageApi)
 
     val userRepo = UserRepository(apiHolder.userApi)
-    val conversationViewModel: ConversationViewModel = viewModel(
-        factory = ConversationViewModelFactory(conversationRepo, messageRepo)
-    )
     val chatRoomManager: ChatRoomManagerViewModel = viewModel(
         factory = ChatRoomManagerViewModelFactory(
             conversationRepo,
