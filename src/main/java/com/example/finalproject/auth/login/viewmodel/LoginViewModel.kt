@@ -40,9 +40,16 @@ class LoginViewModel(
 
             if (res.isSuccess) {
                 val token = res.getOrNull()?.access_token ?: ""
+                tokenManager.clear()
                 tokenManager.saveAccessToken(token)
+                val userRes = repo.fetchUserProfile()
+                if (userRes.isSuccess) {
+                    val user = userRes.getOrNull()
+                    tokenManager.saveUserId(user?.id ?: 0)
+                }
                 onSuccess()
-            } else {
+            }
+            else {
                 val e = res.exceptionOrNull()
                 val msg = when (e) {
                     is retrofit2.HttpException -> {
@@ -59,6 +66,8 @@ class LoginViewModel(
             }
         }
     }
+
+
 
 }
 

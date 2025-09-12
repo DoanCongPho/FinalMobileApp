@@ -12,6 +12,25 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.InputStream
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.finalproject.core.network.api.quiz.QuizApi
+import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
+
+
+class CreateQuizViewModelFactory(
+    private val repository: CreateQuizRepository
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(CreateQuizViewModel::class.java)) {
+            return CreateQuizViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
 
 class CreateQuizRepository(
     private val api: QuizApi
