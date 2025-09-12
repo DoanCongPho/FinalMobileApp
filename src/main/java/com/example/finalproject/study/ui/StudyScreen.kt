@@ -36,7 +36,7 @@ fun StudyScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF6B5BFF) // purple background like mock
+        color = Color(0xFF6B5BFF)
     ) {
         Column(
             modifier = Modifier

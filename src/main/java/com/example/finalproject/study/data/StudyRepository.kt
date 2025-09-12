@@ -7,7 +7,7 @@ import kotlinx.coroutines.delay
 class StudyRepository {
     suspend fun loadQuote(): Quote {
         delay(200) // pretend network
-        return Quote("Hello May Em", "StudyMate")
+        return Quote("Change the world \nby being yourself", "StudyMate")
     }
 
     suspend fun loadTopics(): List<Topic> {

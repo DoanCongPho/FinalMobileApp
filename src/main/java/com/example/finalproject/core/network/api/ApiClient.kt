@@ -32,7 +32,6 @@ object ApiClient {
             .addConverterFactory(GsonConverterFactory.create())
             .client(client)
             .build()
-
         return ApiClientHolder(
             retrofit.create(QuizApi::class.java),
             retrofit.create(RegisterApi::class.java),
