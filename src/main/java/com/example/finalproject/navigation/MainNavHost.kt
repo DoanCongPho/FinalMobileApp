@@ -12,6 +12,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.example.finalproject.Tasks.ui.AddTaskScreen
 import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.DailyScheduleScreen
@@ -48,7 +49,6 @@ import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.study.ui.StudyScreen
 import java.time.LocalDate
-
 
 @Composable
 fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -306,10 +306,6 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             PomodoroScreen(navController)
         }
 
-
-
-
-
         composable(Screen.Review.route) {
             // supply your DI repo here; replace FakeReviewRepository with real one when ready
             val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
@@ -317,56 +313,73 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             )
             com.example.finalproject.review.ui.ReviewRoute(
                 onBack = { navController.popBackStack() },
-                onCreateQuiz = { /* nav to create quiz */ },
+                onCreateQuiz = { navController.navigate(Screen.CreateQuizRoot.route) },
                 onFindFriends = { /* nav to friends */ },
                 factory = factory
             )
         }
 
-
-        // Choose Source (AI path)
-        composable(Screen.CreateQuizChoose.route) { backStackEntry ->
-            val parentEntry = remember(backStackEntry) {
-                navController.getBackStackEntry(Screen.CreateQuizRoot.route)
-            }
-            val createQuizVm: CreateQuizViewModel = viewModel(
-                parentEntry,
-                factory = CreateQuizViewModelFactory(CreateQuizRepository(apiHolder.quizApi))
-            )
-            com.example.finalproject.createquiz.ui.ChooseSourceScreen(
-                nav = navController,
-                vm = createQuizVm
-            )
-        }
-
-        composable(Screen.CreateQuizManual.route) {
-            val vm: ManualQuizViewModel = viewModel()
-            com.example.finalproject.createquiz.ui.ManualQuizScreen(
-                viewModel = vm,
-                onFinish = {
-                    navController.navigate("create_quiz/success?quizId=manual_dev") {
-                        popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-
-        composable(
-            Screen.CreateQuizSuccess.route,
-            arguments = listOf(navArgument("quizId") {
-                type = NavType.StringType
-                defaultValue = ""
-            })
+        navigation(
+            startDestination = Screen.CreateQuizMode.route, // now starts at mode screen
+            route = Screen.CreateQuizRoot.route
         ) {
-            com.example.finalproject.createquiz.ui.SuccessScreen(
-                nav = navController,
-                onGetThere = { navController.navigate(Screen.Study.route) },
-                onBackToMenu = { navController.popBackStack() }
-            )
+            // Mode screen
+            composable(Screen.CreateQuizMode.route) {
+                com.example.finalproject.createquiz.ui.ChooseModeScreen(
+                    onCreateByAI = { navController.navigate(Screen.CreateQuizChoose.route) },
+                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) }
+                )
+            }
+
+            // Choose Source (AI path)
+            composable(Screen.CreateQuizChoose.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                // ✅ use the ApiClient INSTANCE you created above, not the type name
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(
+                        CreateQuizRepository(apiHolder.quizApi)
+                    )
+                )
+                com.example.finalproject.createquiz.ui.ChooseSourceScreen(
+                    nav = navController,
+                    vm = createQuizVm
+                )
+            }
+
+
+            composable(Screen.CreateQuizManual.route) {
+                val vm: ManualQuizViewModel = viewModel()
+                com.example.finalproject.createquiz.ui.ManualQuizScreen(
+                    viewModel = vm,
+                    onFinish = {
+                        navController.navigate("create_quiz/success?quizId=manual_dev") {
+                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // Success
+            composable(
+                Screen.CreateQuizSuccess.route,
+                arguments = listOf(navArgument("quizId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                })
+            ) {
+                com.example.finalproject.createquiz.ui.SuccessScreen(
+                    nav = navController,
+                    onGetThere = { navController.navigate(Screen.Study.route) },
+                    onBackToMenu = { navController.popBackStack() }
+                )
+            }
         }
+
         composable(Screen.Quiz.route) {
             val quizViewModel: QuizViewModel = viewModel(
                 factory = QuizViewModelFactory(QuizRepository(apiHolder.quizApi))
