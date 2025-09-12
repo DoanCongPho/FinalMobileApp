@@ -42,7 +42,6 @@ import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.main.ui.MainScreen
-import com.google.common.base.Defaults.defaultValue
 
 sealed class Screen(val route: String) {
     object Authen: Screen("authen")
@@ -82,7 +81,7 @@ fun AppNavigation(navController: NavHostController) {
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },

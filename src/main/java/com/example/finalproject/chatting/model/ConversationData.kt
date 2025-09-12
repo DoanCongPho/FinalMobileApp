@@ -41,4 +41,3 @@ data class CreateConversationRequest(
     val type: String                       // "direct" or "group"
 )
 
-

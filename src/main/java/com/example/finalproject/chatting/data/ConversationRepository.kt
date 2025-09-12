@@ -68,14 +68,21 @@ class ConversationRepository(private val api: ConversationApi) {
     }
 
 
-    suspend fun addOrUpdateParticipant(conversationId: Int, participant: Participant): Result<Participant> {
-        return try {
-            val res = api.addOrUpdateParticipant(conversationId, participant.user.id, participant)
-            Result.success(res)
-        } catch (e: Exception) {
-            Result.failure(e)
+
+
+        suspend fun addOrUpdateParticipant(
+            conversationId: Int,
+            userId: Int
+        ): Result<Participant> {
+            return try {
+                val res = api.addParticipant(conversationId, userId)
+                Result.success(res)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
-    }
+
+
 
     suspend fun removeParticipant(conversationId: Int, userId: Int): Result<Participant> {
         return try {

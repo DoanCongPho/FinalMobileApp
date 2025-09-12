@@ -33,8 +33,7 @@ import com.example.finalproject.chatting.ui.AddConversationScreen
 import com.example.finalproject.chatting.viewmodel.AddConversationChatRoomViewModelFactory
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFactory
-import com.example.finalproject.chatting.viewmodel.ConversationViewModel
-import com.example.finalproject.chatting.viewmodel.ConversationViewModelFactory
+
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.createquiz.data.CreateQuizRepository
@@ -58,14 +57,14 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val apiHolder = ApiClient.create(tokenManager)
     val conversationRepo = ConversationRepository(apiHolder.conversationApi)
     val messageRepo = MessageRepository(apiHolder.messageApi)
-    val conversationViewModel: ConversationViewModel = viewModel(
-        factory = ConversationViewModelFactory(conversationRepo, messageRepo)
-    )
+
+    val userRepo = UserRepository(apiHolder.userApi)
     val chatRoomManager: ChatRoomManagerViewModel = viewModel(
         factory = ChatRoomManagerViewModelFactory(
             conversationRepo,
             messageRepo,
-            tokenManager
+            tokenManager,
+            userRepo
         )
     )
     NavHost(
@@ -85,7 +84,6 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                     navController.navigate("chatScreen/$conversationId/$displayName")
                 },
                 onNewMessageClick = { navController.navigate(Screen.NewMessage.route) },
-                onCreateGroupClick = { navController.navigate(Screen.CreateGroup.route) }
 
             )
         }

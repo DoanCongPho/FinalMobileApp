@@ -40,10 +40,9 @@ interface ConversationApi {
     ): Conversation
 
     @PUT("conversations/{conversation_id}/participants/{user_id}")
-    suspend fun addOrUpdateParticipant(
+    suspend fun addParticipant(
         @Path("conversation_id") conversationId: Int,
         @Path("user_id") userId: Int,
-        @Body participant: Participant
     ): Participant
 
     // Remove participant

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.finalproject.chatting.data.ConversationRepository
 import com.example.finalproject.chatting.data.MessageRepository
+import com.example.finalproject.chatting.data.UserRepository
 import com.example.finalproject.chatting.model.*
 import com.example.finalproject.chatting.websocket.GatewaySocket
 import com.example.finalproject.core.DataStore.TokenManager
@@ -16,7 +17,8 @@ import org.json.JSONObject
 class ChatRoomManagerViewModel(
     private val conversationRepo: ConversationRepository,
     private val messageRepo: MessageRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val userRepo: UserRepository,
 ) : ViewModel() {
 
     private val _currentUserId = MutableStateFlow<Int?>(null)
@@ -28,6 +30,16 @@ class ChatRoomManagerViewModel(
 
     // Messages map: conversationId -> messages
     private val _messagesMap = mutableMapOf<Int, MutableStateFlow<List<Message>>>()
+
+
+    // Participants map: conversationId -> participants
+    private val _participantsMap = mutableMapOf<Int, MutableStateFlow<List<Participant>>>()
+
+    fun getParticipantsFor(convoId: Int): StateFlow<List<Participant>> {
+        return _participantsMap.getOrPut(convoId) { MutableStateFlow(emptyList()) }
+    }
+
+
 
     // WebSocket
     private var gatewaySocket: GatewaySocket? = null
@@ -49,6 +61,7 @@ class ChatRoomManagerViewModel(
                 // Load messages cho tất cả conversation
                 _conversations.value.forEach { convo ->
                     fetchMessages(convo.id)
+                    _participantsMap[convo.id] = MutableStateFlow(convo.participants)
                 }
             } catch (e: Exception) { e.printStackTrace() }
         }
@@ -163,7 +176,6 @@ class ChatRoomManagerViewModel(
         gatewaySocket?.disconnect()
     }
 
-
     fun createDirectConversation(recipientId: Int, onSuccess: (Conversation) -> Unit) {
         viewModelScope.launch {
             try {
@@ -171,15 +183,21 @@ class ChatRoomManagerViewModel(
                     convo.participants.any { it.user.id == recipientId } && convo.type == "direct"
                 }
 
-                val convo = if (existing != null) {
-                    existing
-                } else {
-                    val newConvo = conversationRepo.createDirectConversation(recipientId)
-                    _conversations.value = _conversations.value + newConvo
-                    newConvo
+                if (existing != null) {
+                    onSuccess(existing)
+                    return@launch
                 }
 
-                onSuccess(convo) // callback to navigate or update UI
+                // Call API
+                val newConvo = conversationRepo.createDirectConversation(recipientId)
+
+                // Check again before adding, because WebSocket might have added it
+                val alreadyExists = _conversations.value.any { it.id == newConvo.id }
+                if (!alreadyExists) {
+                    _conversations.value = _conversations.value + newConvo
+                }
+
+                onSuccess(newConvo)
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -195,11 +213,79 @@ class ChatRoomManagerViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val convo = conversationRepo.createGroupConversation(name, description, participantIds)
-                _conversations.value = _conversations.value + convo
-                onSuccess(convo) // callback to navigate or update UI
+                val newConvo = conversationRepo.createGroupConversation(name, description, participantIds)
+
+                val exists = _conversations.value.any { it.id == newConvo.id }
+                if (!exists) {
+                    _conversations.value = _conversations.value + newConvo
+                }
+
+                onSuccess(newConvo)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun deleteConversation(id: Int) {
+        viewModelScope.launch {
+            val result = conversationRepo.deleteConversation(id)
+            if (result.isSuccess) {
+                _conversations.value = _conversations.value.filter { it.id != id }
+                _messagesMap.remove(id)
+            }
+        }
+    }
+
+    fun addOrUpdateParticipant(conversationId: Int, userId: Int, onResult: (Result<Participant>) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = conversationRepo.addOrUpdateParticipant(conversationId, userId)
+            result.onSuccess { participant ->
+                val stateFlow = _participantsMap.getOrPut(conversationId) { MutableStateFlow(emptyList()) }
+                // Nếu đã tồn tại user trong list thì replace, chưa có thì add
+                val updated = stateFlow.value.toMutableList().apply {
+                    val idx = indexOfFirst { it.user.id == participant.user.id }
+                    if (idx >= 0) this[idx] = participant else add(participant)
+                }
+                stateFlow.value = updated
+            }
+            onResult(result)
+        }
+    }
+
+    fun removeParticipant(
+        conversationId: Int,
+        userId: Int,
+        onResult: (Result<Unit>) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val result = conversationRepo.removeParticipant(conversationId, userId)
+            val mapped = result.map { Unit } // convert Result<Participant> -> Result<Unit>
+            mapped.onSuccess {
+                val stateFlow = _participantsMap.getOrPut(conversationId) { MutableStateFlow(emptyList()) }
+                stateFlow.value = stateFlow.value.filterNot { it.user.id == userId }
+            }
+            onResult(mapped)
+        }
+    }
+
+
+
+    fun leaveConversation(conversationId: Int, onResult: (Result<Participant>) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = conversationRepo.leaveConversation(conversationId)
+            onResult(result)
+        }
+    }
+
+    fun findUserOnce(username: String, onResult: (User?) -> Unit) {
+        viewModelScope.launch {
+            val result = userRepo.getUserByUsername(username)
+            if (result.isSuccess) {
+                onResult(result.getOrNull())
+            } else {
+                onResult(null)
             }
         }
     }
