@@ -33,8 +33,6 @@ import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.study.ui.StudyScreen
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
-import com.example.finalproject.createquiz.data.CreateQuizRepository
-import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
 import com.example.finalproject.journey.ui.QuizMainScreen
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.core.network.TokenProvider
@@ -75,7 +73,7 @@ sealed class Screen(val route: String) {
     object CreateGroup: Screen("createGroup")
 }
 
-        
+
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
@@ -93,9 +91,6 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable(Screen.Register.route) {
-            val vm: RegisterViewModel = viewModel(
-                factory = RegisterViewModelFactory(RegisterRepository())
-            )
             val vm: RegisterViewModel =
                 viewModel(factory = RegisterViewModelFactory(RegisterRepository(apiHolder)))
             RegisterScreen(
