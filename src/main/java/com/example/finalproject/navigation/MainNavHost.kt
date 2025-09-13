@@ -19,6 +19,7 @@ import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
+import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
@@ -103,12 +104,11 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         composable(Screen.Calendar.route) {
             val vm: CalendarViewModel =
                 viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
+            val taskViewModel: TaskViewModel = viewModel()
             CalendarScreen(
                 viewModel = vm,
-                navController,
-                onNavigateToStudy = { navController.navigate(Screen.Study.route) },
-                onNavigateToChat = { navController.navigate(Screen.Chat.route) },
-                onNavigateToAccount = { navController.navigate(Screen.Account.route) }
+                taskViewModel = taskViewModel,
+                navController = navController
             )
         }
         composable(
