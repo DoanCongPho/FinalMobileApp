@@ -22,6 +22,7 @@ import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskActionSelectionScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
+import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
@@ -112,12 +113,11 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         composable(Screen.Calendar.route) {
             val vm: CalendarViewModel =
                 viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
+            val taskViewModel: TaskViewModel = viewModel()
             CalendarScreen(
                 viewModel = vm,
-                navController,
-                onNavigateToStudy = { navController.navigate(Screen.Study.route) },
-                onNavigateToChat = { navController.navigate(Screen.Chat.route) },
-                onNavigateToAccount = { navController.navigate(Screen.Account.route) }
+                taskViewModel = taskViewModel,
+                navController = navController
             )
         }
         composable(
@@ -399,15 +399,35 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 )
             }
 
+            // Prompt Screen (AI configuration)
+            composable(Screen.CreateQuizPrompt.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(
+                        CreateQuizRepository(apiHolder.quizApi)
+                    )
+                )
+                com.example.finalproject.createquiz.ui.PromptScreen(
+                    nav = navController,
+                    vm = createQuizVm
+                )
+            }
+
 
             composable(Screen.CreateQuizManual.route) {
                 val vm: ManualQuizViewModel = viewModel()
                 com.example.finalproject.createquiz.ui.ManualQuizScreen(
                     viewModel = vm,
                     onFinish = {
-                        navController.navigate("create_quiz/success?quizId=manual_dev") {
-                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
-                            launchSingleTop = true
+                        // Call the real API instead of hardcoded navigation
+                        vm.submitQuiz(title = "Manual Quiz") { realQuizId ->
+                            navController.navigate("create_quiz/success?quizId=$realQuizId") {
+                                popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -439,15 +459,14 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 viewModel = quizViewModel
             )
         }
-        composable(Screen.ChatGpt.route) {
-            val context = LocalContext.current
-            LaunchedEffect(Unit) {
-                openCustomTab(context, "https://gemini.google.com/app")
-                // Sau khi mở tab, quay lại màn hình trước (nếu muốn)
-                // navController.popBackStack()
-            }
-        }
-
+        
+        // Temporarily disabled API test screen due to compilation issues
+        // composable("api_test") {
+        //     com.example.finalproject.test.QuizApiTestScreen(
+        //         tokenManager = tokenManager,
+        //         onBack = { navController.popBackStack() }
+        //     )
+        // }
 
     }
 }

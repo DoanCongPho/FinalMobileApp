@@ -14,53 +14,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.finalproject.calendar.model.CalendarEvent
-import com.example.finalproject.calendar.model.EventType
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
+import com.example.finalproject.Tasks.model.CalendarTask
+import com.example.finalproject.Tasks.viewmodel.TaskViewModel
+import com.example.finalproject.main.ui.BottomNavigationBar
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.compose.foundation.clickable
+import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
-    navController: NavController,
-    onNavigateToStudy: () -> Unit,
-    onNavigateToChat: () -> Unit,
-    onNavigateToAccount: () -> Unit
+    taskViewModel: TaskViewModel,
+    navController: NavHostController
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // Use remember to trigger recomposition when tasks change
+    val tasks by remember(taskViewModel) { 
+        derivedStateOf { taskViewModel.tasks.toList() }
+    }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Calendar") },
-                    label = { Text("Calendar") },
-                    selected = true,
-                    onClick = { }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.School, contentDescription = "Study") },
-                    label = { Text("Study") },
-                    selected = false,
-                    onClick = onNavigateToStudy
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Chat, contentDescription = "Chat") },
-                    label = { Text("Chat") },
-                    selected = false,
-                    onClick = onNavigateToChat
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
-                    label = { Text("Account") },
-                    selected = false,
-                    onClick = onNavigateToAccount
-                )
-            }
+            BottomNavigationBar(navController = navController)
         }
     ) { padding ->
         LazyColumn(
@@ -87,18 +69,22 @@ fun CalendarScreen(
             }
 
             item {
+                val taskDates = tasks.map { it.date }
+                
                 CalendarGrid(
                     selectedDate = uiState.selectedDate.toLocalDate(),
                     onDateSelect = { /* Handle date selection */ },
-                    events = uiState.events.map { it.time.toLocalDate() }
+                    events = taskDates
                 )
             }
 
-            // Today's events section
+            // Today's tasks section
             item {
                 val todayDateString = LocalDateTime.now().toLocalDate().toString()
+                val todayTasks = tasks.filter { it.date == LocalDateTime.now().toLocalDate() }
+                
                 Text(
-                    text = "Today",
+                    text = "Today (${todayTasks.size} tasks)",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
@@ -110,21 +96,24 @@ fun CalendarScreen(
                 )
             }
 
-            items(uiState.events.filter { it.time.dayOfYear == LocalDateTime.now().dayOfYear }) { event ->
-                EventItem(
-                    event = event,
+            items(tasks.filter { it.date == LocalDateTime.now().toLocalDate() }) { task ->
+                TaskEventItem(
+                    task = task,
                     onClick = {
-                        val eventDateString = event.time.toLocalDate().toString()
-                        navController.navigate("daily_schedule/$eventDateString")
-                    }
+                        val taskDateString = task.date.toString()
+                        navController.navigate("daily_schedule/$taskDateString")
+                    },
+                    onToggleComplete = { calendarViewModel.toggleTaskState(task) }
                 )
             }
 
-            // Tomorrow's events section
+            // Tomorrow's tasks section
             item {
                 val tomorrowDateString = LocalDateTime.now().plusDays(1).toLocalDate().toString()
+                val tomorrowTasks = tasks.filter { it.date == LocalDateTime.now().plusDays(1).toLocalDate() }
+                
                 Text(
-                    text = "Tomorrow",
+                    text = "Tomorrow (${tomorrowTasks.size} tasks)",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black,
@@ -136,45 +125,33 @@ fun CalendarScreen(
                 )
             }
 
-            items(uiState.events.filter { it.time.dayOfYear == LocalDateTime.now().plusDays(1).dayOfYear }) { event ->
-                EventItem(
-                    event = event,
+            items(tasks.filter { it.date == LocalDateTime.now().plusDays(1).toLocalDate() }) { task ->
+                TaskEventItem(
+                    task = task,
                     onClick = {
-                        val eventDateString = event.time.toLocalDate().toString()
-                        navController.navigate("daily_schedule/$eventDateString")
-                    }
+                        val taskDateString = task.date.toString()
+                        navController.navigate("daily_schedule/$taskDateString")
+                    },
+                    onToggleComplete = { taskViewModel.toggleTaskState(task) }
                 )
-            }
-
-            // Vacations section
-            item {
-                Text(
-                    text = "Vacations",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
-                )
-            }
-
-            items(uiState.events.filter { it.type == EventType.VACATION }) { event ->
-                EventItem(event)
             }
         }
     }
 }
 
 @Composable
-fun EventItem(event: CalendarEvent, onClick: (() -> Unit)? = null) {
-    val dateFormatter = DateTimeFormatter.ofPattern("dd-MM")
-    
+fun TaskEventItem(
+    task: CalendarTask, 
+    onClick: (() -> Unit)? = null,
+    onToggleComplete: (() -> Unit)? = null
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clickable(enabled = onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFEFEBF2)
+        color = if (task.state == 1) Color(0xFFE8F5E8) else Color(0xFFEFEBF2) // Green tint for completed tasks
     ) {
         Row(
             modifier = Modifier
@@ -187,55 +164,63 @@ fun EventItem(event: CalendarEvent, onClick: (() -> Unit)? = null) {
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Checkbox for task completion
+                Checkbox(
+                    checked = task.state == 1,
+                    onCheckedChange = { onToggleComplete?.invoke() },
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                
                 Column {
                     Text(
-                        text = event.title,
+                        text = task.title,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color.Black
+                        color = if (task.state == 1) Color.Gray else Color.Black
                     )
-                    if (event.type == EventType.VACATION) {
+                    
+                    Row {
+                        if (task.time != null) {
+                            Text(
+                                text = task.time.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        } else if (task.isAllDay) {
+                            Text(
+                                text = "All day",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                        
+                        if (task.tag != null) {
+                            Text(
+                                text = " • ${task.tag}",
+                                fontSize = 14.sp,
+                                color = Color(0xFF6B4EFF)
+                            )
+                        }
+                    }
+                    
+                    if (task.details != null) {
                         Text(
-                            text = "${event.time.format(DateTimeFormatter.ofPattern("dd-MM"))} to ${event.time.plusDays(14).format(DateTimeFormatter.ofPattern("dd-MM"))}",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    } else {
-                        Text(
-                            text = String.format("%02d:%02d", event.time.hour, event.time.minute),
-                            fontSize = 14.sp,
-                            color = Color.Gray
+                            text = task.details,
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                 }
             }
 
-            when (event.type) {
-                EventType.DAILY_STANDUP -> Icon(
-                    Icons.Default.Group,
-                    contentDescription = "Standup",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Blue
-                )
-                EventType.MEETING -> Icon(
-                    Icons.Default.Business,
-                    contentDescription = "Meeting",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Red
-                )
-                EventType.VACATION -> Icon(
-                    Icons.Default.FlightTakeoff,
-                    contentDescription = "Vacation",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Blue
-                )
-                else -> Icon(
-                    Icons.Default.Event,
-                    contentDescription = "Event",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.Blue
-                )
-            }
+            // Task status icon
+            Icon(
+                imageVector = if (task.state == 1) Icons.Default.CheckCircle else Icons.Default.Circle,
+                contentDescription = if (task.state == 1) "Completed" else "Pending",
+                modifier = Modifier.size(24.dp),
+                tint = if (task.state == 1) Color(0xFF4CAF50) else Color.Gray
+            )
         }
     }
 }

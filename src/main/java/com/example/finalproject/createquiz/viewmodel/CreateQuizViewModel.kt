@@ -17,7 +17,9 @@ data class CreateQuizUiState(
     val numQuestions: Int = 10,
     val isSubmitting: Boolean = false,
     val createdQuizId: String? = null,
-    val error: String? = null
+    val error: String? = null,
+    val isCreatingFromFile: Boolean = false,
+    val createdQuiz: com.example.finalproject.journey.model.Quiz? = null
 )
 
 class CreateQuizViewModel(
@@ -40,6 +42,46 @@ class CreateQuizViewModel(
     fun setDifficulty(d: Difficulty) = setState { copy(difficulty = d) }
     fun setNumQuestions(n: Int) = setState { copy(numQuestions = n) }
 
+    // NEW: Create quiz from single file using new backend API
+    fun createQuizFromFile(resolver: ContentResolver, onSuccess: (Int) -> Unit) {
+        val s = _ui.value
+        if (s.sources.isEmpty()) { setError("Please select a file."); return }
+        if (s.numQuestions <= 0) { setError("Number of questions must be > 0."); return }
+
+        setState { copy(isSubmitting = true, isCreatingFromFile = true, error = null) }
+        viewModelScope.launch {
+            runCatching {
+                // Use the first source file for the new API
+                val source = s.sources.first()
+                repo.createQuizFromFile(
+                    resolver = resolver,
+                    source = source,
+                    prompt = s.prompt.takeIf { it.isNotBlank() },
+                    numQuestions = s.numQuestions
+                )
+            }.onSuccess { quiz ->
+                setState { 
+                    copy(
+                        isSubmitting = false, 
+                        isCreatingFromFile = false,
+                        createdQuiz = quiz,
+                        createdQuizId = quiz.id.toString()
+                    ) 
+                }
+                onSuccess(quiz.id)
+            }.onFailure {
+                setState { 
+                    copy(
+                        isSubmitting = false, 
+                        isCreatingFromFile = false,
+                        error = it.message ?: "Failed to create quiz from file"
+                    ) 
+                }
+            }
+        }
+    }
+
+    // Legacy method for backward compatibility
     fun submit(resolver: ContentResolver, onSuccess: (String) -> Unit) {
         val s = _ui.value
         if (s.sources.isEmpty()) { setError("Please select at least one file."); return }

@@ -76,6 +76,13 @@ fun StudyScreen(
                 onClick = { navController.navigate("quiz") },
                 modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
             )
+            
+            // Temporarily disabled API test button
+            // BigActionButton(
+            //     label = "🔧 API Test",
+            //     onClick = { navController.navigate("api_test") },
+            //     modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
+            // )
         }
     }
 }

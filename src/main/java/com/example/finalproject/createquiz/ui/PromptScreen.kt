@@ -118,9 +118,34 @@ fun PromptScreen(
                             popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
                             launchSingleTop = true
                         }
-                    }) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "Create", tint = Color.White)
                     }
+                    
+                    // Progress message during creation
+                    if (ui.isSubmitting) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = "Creating quiz from file...\nThis may take a few minutes",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            }
+            
+            // Error message
+            ui.error?.let { errorMsg ->
+                Spacer(Modifier.height(8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = errorMsg,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(12.dp)
+                    )
                 }
             }
         }
