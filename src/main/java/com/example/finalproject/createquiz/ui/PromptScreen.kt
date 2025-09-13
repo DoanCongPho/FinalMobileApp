@@ -15,7 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.finalproject.createquiz.model.Difficulty
@@ -29,6 +31,7 @@ fun PromptScreen(
     vm: CreateQuizViewModel = viewModel()
 ) {
     val ui by vm.ui.collectAsState()
+    val context = LocalContext.current
 
     Surface(Modifier.fillMaxSize(), color = Color(0xFF6B5BFF)) {
         Column(Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()) {
@@ -103,24 +106,63 @@ fun PromptScreen(
             StepDots(current = 1, total = 2)
             Spacer(Modifier.height(16.dp))
 
-            // TEST-ONLY: jump straight to Success screen (bypass API)
+            // Create Quiz Button with Real API Call and Progress
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier
-                        .size(96.dp)
-                        .background(Color(0xFFFF974A), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = {
-                        // Keep the route shape consistent with your NavHost
-                        nav.navigate("create_quiz/success?quizId=dev_test") {
-                            // pop within the create_quiz graph, but keep the graph itself
-                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
-                            launchSingleTop = true
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        Modifier
+                            .size(96.dp)
+                            .background(
+                                if (ui.isSubmitting) Color(0xFFFFC79F) else Color(0xFFFF974A),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (ui.isSubmitting) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        } else {
+                            IconButton(onClick = {
+                                vm.createQuizFromFile(context.contentResolver) { quizId ->
+                                    nav.navigate("create_quiz/success?quizId=$quizId") {
+                                        popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }) {
+                                Icon(Icons.Default.ArrowForward, contentDescription = "Create", tint = Color.White)
+                            }
                         }
-                    }) {
-                        Icon(Icons.Default.ArrowForward, contentDescription = "Create", tint = Color.White)
                     }
+                    
+                    // Progress message during creation
+                    if (ui.isSubmitting) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = "Creating quiz from file...\nThis may take a few minutes",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            }
+            
+            // Error message
+            ui.error?.let { errorMsg ->
+                Spacer(Modifier.height(8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = errorMsg,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(12.dp)
+                    )
                 }
             }
         }

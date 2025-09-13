@@ -115,11 +115,8 @@ fun ChooseSourceScreen(
                             CircleShape
                         )
                         .clickable(enabled = ui.sources.isNotEmpty()) {
-                            // TEST PATH: go straight to success screen
-                            nav.navigate("create_quiz/success?quizId=dev_test") {
-                                popUpTo("create_quiz") { inclusive = false }
-                                launchSingleTop = true
-                            }
+                            // Navigate to prompt screen to configure AI parameters
+                            nav.navigate("create_quiz/prompt")
                         },
                     contentAlignment = Alignment.Center
                 ) {

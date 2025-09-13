@@ -20,7 +20,7 @@ interface QuizApi {
     @Multipart
     @POST("users/me/quizzes/from-file")
     suspend fun createQuizFromFile(
-        @Part("file") file: MultipartBody.Part,
+        @Part file: MultipartBody.Part,
         @Part("prompt") prompt: RequestBody?,
         @Part("question_count") questionCount: RequestBody
     ): Response<Quiz>

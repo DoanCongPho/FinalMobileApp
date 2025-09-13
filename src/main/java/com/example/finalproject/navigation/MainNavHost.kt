@@ -353,6 +353,23 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 )
             }
 
+            // Prompt Screen (AI configuration)
+            composable(Screen.CreateQuizPrompt.route) { backStackEntry ->
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.CreateQuizRoot.route)
+                }
+                val createQuizVm: CreateQuizViewModel = viewModel(
+                    parentEntry,
+                    factory = CreateQuizViewModelFactory(
+                        CreateQuizRepository(apiHolder.quizApi)
+                    )
+                )
+                com.example.finalproject.createquiz.ui.PromptScreen(
+                    nav = navController,
+                    vm = createQuizVm
+                )
+            }
+
 
             composable(Screen.CreateQuizManual.route) {
                 val vm: ManualQuizViewModel = viewModel()

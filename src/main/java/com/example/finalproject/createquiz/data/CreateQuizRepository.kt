@@ -16,6 +16,9 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.InputStream
+import java.io.IOException
+import java.net.SocketTimeoutException
+import kotlinx.coroutines.delay
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.finalproject.core.network.api.quiz.QuizApi
@@ -64,7 +67,7 @@ class CreateQuizRepository(
         }
     }
     
-    // File-based Quiz Creation - NEW API method
+    // File-based Quiz Creation with Retry Logic and Validation
     suspend fun createQuizFromFile(
         resolver: ContentResolver,
         source: QuizSource,
@@ -72,6 +75,14 @@ class CreateQuizRepository(
         numQuestions: Int
     ): Quiz {
         val uri = Uri.parse(source.uriString)
+        
+        // File size validation (limit to 10MB)
+        val maxFileSize = 10 * 1024 * 1024 // 10MB in bytes
+        val fileSize = resolver.openInputStream(uri)?.available() ?: 0
+        if (fileSize > maxFileSize) {
+            throw Exception("File is too large (${fileSize / (1024 * 1024)}MB). Maximum size is 10MB.")
+        }
+        
         val tempFile = resolver.openInputStream(uri)!!.use { inputStream ->
             streamToTemp(inputStream, source.displayName)
         }
@@ -85,12 +96,55 @@ class CreateQuizRepository(
         val promptBody = prompt?.toRequestBody("text/plain".toMediaTypeOrNull())
         val questionCountBody = numQuestions.toString().toRequestBody("text/plain".toMediaTypeOrNull())
         
-        val response = api.createQuizFromFile(filePart, promptBody, questionCountBody)
-        if (response.isSuccessful) {
-            return response.body() ?: throw Exception("Empty response body")
-        } else {
-            throw Exception("Failed to create quiz from file: ${response.message()}")
+        // Retry logic with exponential backoff
+        return retryWithBackoff(
+            maxRetries = 3,
+            baseDelayMs = 1000L,
+            multiplier = 2.0
+        ) {
+            val response = api.createQuizFromFile(filePart, promptBody, questionCountBody)
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("Empty response body")
+            } else {
+                throw Exception("API Error ${response.code()}: ${response.message()}")
+            }
         }
+    }
+    
+    // Retry helper function with exponential backoff
+    private suspend fun <T> retryWithBackoff(
+        maxRetries: Int,
+        baseDelayMs: Long,
+        multiplier: Double,
+        block: suspend () -> T
+    ): T {
+        var currentDelay = baseDelayMs
+        repeat(maxRetries) { attempt ->
+            try {
+                return block()
+            } catch (e: Exception) {
+                // Only retry on timeout and IO exceptions
+                when (e) {
+                    is SocketTimeoutException,
+                    is IOException -> {
+                        if (attempt == maxRetries - 1) {
+                            // Last attempt failed, throw with helpful message
+                            throw Exception(
+                                "Request failed after $maxRetries attempts. " +
+                                "This may be due to large file size or slow network. " +
+                                "Original error: ${e.message}",
+                                e
+                            )
+                        }
+                        // Wait before retrying
+                        delay(currentDelay)
+                        currentDelay = (currentDelay * multiplier).toLong()
+                    }
+                    else -> throw e // Don't retry other exceptions
+                }
+            }
+        }
+        throw IllegalStateException("Should not reach here")
     }
     
     // Legacy method - keep for backward compatibility

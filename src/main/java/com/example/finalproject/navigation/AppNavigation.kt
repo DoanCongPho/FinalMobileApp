@@ -47,6 +47,7 @@ sealed class Screen(val route: String) {
     object Quiz: Screen("quiz")
     object CreateQuizRoot : Screen("create_quiz")
     object CreateQuizChoose : Screen("create_quiz/choose")
+    object CreateQuizPrompt : Screen("create_quiz/prompt")
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
     object CreateQuizMode : Screen("create_quiz/mode")
     object CreateQuizManual : Screen("create_quiz/manual")
