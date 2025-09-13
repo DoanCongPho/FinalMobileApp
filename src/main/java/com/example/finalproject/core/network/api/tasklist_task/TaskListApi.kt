@@ -28,9 +28,9 @@ interface TaskListApi {
     
     /**
      * Update existing task list
-     * PUT /task-lists/{task_list_id}
+     * PATCH /task-lists/{task_list_id}
      */
-    @PUT("task-lists/{task_list_id}")
+    @PATCH("task-lists/{task_list_id}")
     suspend fun updateTaskList(
         @Path("task_list_id") taskListId: Int,
         @Body request: TaskListRequest

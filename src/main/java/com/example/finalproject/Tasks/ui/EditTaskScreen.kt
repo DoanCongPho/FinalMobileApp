@@ -175,7 +175,7 @@ fun EditTaskScreen(
                                    originalMonthlyPattern != newMonthlyPattern) {
                             // Repeat pattern changes (frequency, end condition, or monthly pattern):
                             
-                            // Save copy of original task before any modifications
+                            // Save copy of  original task before any modifications
                             val originalTaskCopy = task.copy()
                             
                             // 1. Delete old series if it existed

@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 
 import com.example.finalproject.Tasks.model.CalendarTask
+import com.example.finalproject.Tasks.model.CalendarTasklist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
@@ -30,12 +31,14 @@ import androidx.compose.ui.res.painterResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.finalproject.Tasks.ui.HourRow
+import com.example.finalproject.Tasks.ui.getDrawableId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyScheduleScreen(
     date: String,
     tasks: List<CalendarTask>,
+    taskLists: List<CalendarTasklist>,
     modifier: Modifier = Modifier,
     onTaskClick: (String) -> Unit,
     onAddClick: () -> Unit,
