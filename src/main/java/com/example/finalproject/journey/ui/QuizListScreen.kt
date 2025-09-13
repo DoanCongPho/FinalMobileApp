@@ -66,7 +66,8 @@ fun QuizListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(WindowInsets.statusBars.asPaddingValues())
+                    .padding(horizontal = 24.dp),
             ) {
                 IconButton(
                     onClick = onBack,
