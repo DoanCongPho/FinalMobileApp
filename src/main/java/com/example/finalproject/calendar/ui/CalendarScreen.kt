@@ -103,7 +103,7 @@ fun CalendarScreen(
                         val taskDateString = task.date.toString()
                         navController.navigate("daily_schedule/$taskDateString")
                     },
-                    onToggleComplete = { calendarViewModel.toggleTaskState(task) }
+                    onToggleComplete = { taskViewModel.toggleTaskState(task) }
                 )
             }
 
