@@ -2,8 +2,10 @@ package com.example.finalproject.navigation
 
 import ChatListScreen
 import ChatScreen
+import ProfileScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,12 +54,15 @@ import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.study.ui.StudyScreen
 import com.example.finalproject.calendar.ui.MonthScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import openCustomTab
 import java.time.LocalDate
 
 
 @Composable
-fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,  onLogout: () -> Unit) {
     val calendarViewModel: CalendarViewModel1 = viewModel(factory = CalendarViewModel1Factory())
     val context = LocalContext.current
     val tokenManager = TokenManager.getInstance(context)
@@ -112,8 +117,25 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             StudyScreen(navController = navController, vm = studyViewModel)
         }
 
+
         composable(Screen.Account.route) {
-            // ProfileScreen()
+            val context = LocalContext.current
+            val tokenManager = remember { TokenManager.getInstance(context) }
+
+            val fullNameState = tokenManager.userName.collectAsState(initial = "")
+            val emailState = tokenManager.userEmail.collectAsState(initial = "")
+            val phoneState = tokenManager.userPhone.collectAsState(initial = "")
+            ProfileScreen(
+                fullName = fullNameState.value ?: "",
+                email = emailState.value ?: "",
+                phoneNumber = phoneState.value ?: "",
+                onLogout = {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        tokenManager.clear()
+                    }
+                    onLogout()
+                }
+            )
         }
 
 
@@ -479,4 +501,6 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
 
     }
 }
+
+
 

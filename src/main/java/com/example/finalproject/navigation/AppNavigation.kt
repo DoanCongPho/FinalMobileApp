@@ -114,7 +114,15 @@ fun AppNavigation(navController: NavHostController) {
         }
 
         composable("main") {
-            MainScreen()
+            MainScreen(
+                onLogout = {
+
+                    navController.navigate(Screen.Authen.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
+
     }
 }

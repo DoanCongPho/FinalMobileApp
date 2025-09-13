@@ -351,44 +351,43 @@ fun ChatScreen(
                                 colors = ButtonDefaults.textButtonColors(
                                     contentColor = Color.Black // <-- đây đổi màu chữ
                                 ), onClick = {
-                                    chatRoomManager.downloadAttachment(
-                                        conversationId = message.conversationId,
-                                        messageId = message.id,
-                                        attachmentId = showDownloadDialog!!.id
-                                    ) { result ->
-                                        result.onSuccess { bytes ->
-                                            val ext =
-                                                showDownloadDialog!!.filename.substringAfterLast(
-                                                    '.',
-                                                    ""
-                                                ).let { if (it.isNotBlank()) ".$it" else "" }
-                                            val fileName =
-                                                showDownloadDialog!!.filename.ifBlank { "attachment_${showDownloadDialog!!.id}$ext" }
-                                            val mimeType = when (ext.lowercase()) {
-                                                ".pdf" -> "application/pdf"
-                                                ".jpg", ".jpeg" -> "image/jpeg"
-                                                ".png" -> "image/png"
-                                                ".gif" -> "image/gif"
-                                                else -> "application/octet-stream"
-                                            }
+                                    val att = showDownloadDialog
+                                    if (att != null) {
+                                        chatRoomManager.downloadAttachment(
+                                            conversationId = message.conversationId,
+                                            messageId = message.id,
+                                            attachmentId = att.id
+                                        ) { result ->
+                                            result.onSuccess { bytes ->
+                                                val ext = att.filename
+                                                    ?.substringAfterLast('.', "")
+                                                    ?.substringBefore(' ')   // cắt bỏ phần như " (1)"
+                                                    ?.takeIf { it.isNotBlank() }
+                                                    ?.let { ".$it" }
+                                                    ?: ""
 
-                                            val uri = saveFileToDownloads(
-                                                context,
-                                                bytes,
-                                                fileName,
-                                                mimeType
-                                            )
-                                            if (uri != null) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Downloaded $fileName",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+
+                                                val fileName = att.filename?.takeIf { it.isNotBlank() }
+                                                    ?: "attachment_${att.id}$ext"
+
+                                                val mimeType = when (ext.lowercase()) {
+                                                    ".pdf" -> "application/pdf"
+                                                    ".jpg", ".jpeg" -> "image/jpeg"
+                                                    ".png" -> "image/png"
+                                                    ".gif" -> "image/gif"
+                                                    else -> "application/octet-stream"
+                                                }
+
+                                                val uri = saveFileToDownloads(context, bytes, fileName, mimeType)
+                                                if (uri != null) {
+                                                    Toast.makeText(context, "Downloaded $fileName", Toast.LENGTH_SHORT).show()
+                                                }
                                             }
                                         }
+                                        showDownloadDialog = null
                                     }
-                                    showDownloadDialog = null
-                                }) {
+                                }
+                            ) {
                                 Text("Yes")
                             }
                         },

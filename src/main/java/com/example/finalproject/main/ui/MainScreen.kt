@@ -12,8 +12,11 @@ import com.example.finalproject.navigation.MainNavHost
 import com.example.finalproject.navigation.Screen
 
 
+
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onLogout: () -> Unit // ⬅️ thêm callback logout
+) {
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val currentRoute = navBackStackEntry?.destination?.route
@@ -35,9 +38,8 @@ fun MainScreen() {
     ) { innerPadding ->
         MainNavHost(
             navController = navController,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            onLogout = onLogout
         )
     }
 }
-
-
