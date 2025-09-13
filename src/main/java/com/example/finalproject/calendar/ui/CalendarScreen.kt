@@ -16,29 +16,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.Tasks.model.CalendarTask
-import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.main.ui.BottomNavigationBar
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.compose.foundation.clickable
+import com.example.finalproject.navigation.Screen
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
-    viewModel: CalendarViewModel,
-    taskViewModel: TaskViewModel,
+    viewModel: CalendarViewModel1,
     navController: NavHostController
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    
-    // Use remember to trigger recomposition when tasks change
-    val tasks by remember(taskViewModel) { 
-        derivedStateOf { taskViewModel.tasks.toList() }
+    // Use tasks from CalendarViewModel1 instead of TaskViewModel
+    val tasks by remember(viewModel.tasks) { 
+        derivedStateOf { viewModel.tasks.toList() }
     }
+    
+    // Simple state for selected date - using current date as default
+    var selectedDate by remember { mutableStateOf(LocalDateTime.now()) }
 
     Scaffold(
         bottomBar = {
@@ -60,8 +61,8 @@ fun CalendarScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = uiState.selectedDate.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()) + 
-                              " " + uiState.selectedDate.year,
+                        text = selectedDate.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault()) + 
+                              " " + selectedDate.year,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -72,8 +73,12 @@ fun CalendarScreen(
                 val taskDates = tasks.map { it.date }
                 
                 CalendarGrid(
-                    selectedDate = uiState.selectedDate.toLocalDate(),
-                    onDateSelect = { /* Handle date selection */ },
+                    selectedDate = selectedDate.toLocalDate(),
+                    onDateSelect = { newSelectedDate ->
+                        // Update the selected date and navigate to MonthScreen
+                        selectedDate = newSelectedDate.atStartOfDay()
+                        navController.navigate(Screen.Month.route)
+                    },
                     events = taskDates
                 )
             }
@@ -103,7 +108,7 @@ fun CalendarScreen(
                         val taskDateString = task.date.toString()
                         navController.navigate("daily_schedule/$taskDateString")
                     },
-                    onToggleComplete = { taskViewModel.toggleTaskState(task) }
+                    onToggleComplete = { viewModel.toggleTaskState(task) }
                 )
             }
 
@@ -132,7 +137,7 @@ fun CalendarScreen(
                         val taskDateString = task.date.toString()
                         navController.navigate("daily_schedule/$taskDateString")
                     },
-                    onToggleComplete = { taskViewModel.toggleTaskState(task) }
+                    onToggleComplete = { viewModel.toggleTaskState(task) }
                 )
             }
         }

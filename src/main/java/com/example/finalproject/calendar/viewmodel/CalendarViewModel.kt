@@ -79,7 +79,9 @@ class CalendarViewModel1(): ViewModel() {
         get() = _draftTask
 
     init {
-        // API initialization and loading happens in MainNavHost
+        viewModelScope.launch {
+            CalendarRepository1.loadTasksFromApi()
+        }
     }
 
     fun loadTasks() {

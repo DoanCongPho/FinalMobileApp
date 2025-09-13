@@ -25,7 +25,6 @@ import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskActionSelectionScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
-import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
@@ -42,6 +41,8 @@ import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFactory
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.study.viewmodel.StudyViewModel
+import com.example.finalproject.study.viewmodel.StudyViewModelFactory
 import com.example.finalproject.createquiz.data.CreateQuizRepository
 import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
@@ -52,6 +53,7 @@ import com.example.finalproject.journey.viewmodel.QuizViewModel
 import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.study.ui.StudyScreen
+import com.example.finalproject.calendar.ui.MonthScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -65,13 +67,13 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
     val context = LocalContext.current
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
-    
+
     // Initialize TaskListApi in the repository
     LaunchedEffect(Unit) {
         com.example.finalproject.calendar.data.CalendarRepository1.setTaskListApi(apiHolder.taskListApi)
         calendarViewModel.loadTasks()
     }
-    
+
     val conversationRepo = ConversationRepository(apiHolder.conversationApi)
     val messageRepo = MessageRepository(apiHolder.messageApi)
 
@@ -107,7 +109,12 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
 
 
         composable(Screen.Study.route) {
-             StudyScreen(navController = navController)
+            val context = LocalContext.current
+            val tokenManager = remember { TokenManager.getInstance(context) }
+            val studyViewModel: StudyViewModel = viewModel(
+                factory = StudyViewModelFactory(tokenManager = tokenManager)
+            )
+            StudyScreen(navController = navController, vm = studyViewModel)
         }
 
 
@@ -133,12 +140,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
 
 
         composable(Screen.Calendar.route) {
-            val vm: CalendarViewModel =
-                viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
-            val taskViewModel: TaskViewModel = viewModel()
             CalendarScreen(
-                viewModel = vm,
-                taskViewModel = taskViewModel,
+                viewModel = calendarViewModel,
                 navController = navController
             )
         }
@@ -236,10 +239,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                 }
             )
         }
-        
+
         composable(Screen.TaskActionSelection.route) { backStackEntry ->
             val dateString = backStackEntry.arguments?.getString("date") ?: ""
-            
+
             TaskActionSelectionScreen(
                 onAddTask = {
                     navController.navigate("add_task/$dateString")
@@ -252,10 +255,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                 }
             )
         }
-        
+
         composable(Screen.AddTasklist.route) {
             val taskLists = calendarViewModel.taskLists
-            
+
             AddTasklistScreen(
                 taskLists = taskLists,
                 calendarViewModel = calendarViewModel,
@@ -368,15 +371,16 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
         }
 
         composable(Screen.Study.route) {
-            StudyScreen(navController = navController)
+            val context = LocalContext.current
+            val tokenManager = remember { TokenManager.getInstance(context) }
+            val studyViewModel: StudyViewModel = viewModel(
+                factory = StudyViewModelFactory(tokenManager = tokenManager)
+            )
+            StudyScreen(navController = navController, vm = studyViewModel)
         }
         composable(Screen.Pomodoro.route) {
             PomodoroScreen(navController)
         }
-
-
-
-
 
         composable(Screen.Review.route) {
             // supply your DI repo here; replace FakeReviewRepository with real one when ready
@@ -399,7 +403,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
             composable(Screen.CreateQuizMode.route) {
                 com.example.finalproject.createquiz.ui.ChooseModeScreen(
                     onCreateByAI = { navController.navigate(Screen.CreateQuizChoose.route) },
-                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) }
+                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) },
+                    onBack = { navController.popBackStack() }
                 )
             }
 

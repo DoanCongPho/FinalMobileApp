@@ -27,12 +27,13 @@ import com.example.finalproject.study.viewmodel.StudyViewModel
 import com.example.finalproject.study.viewmodel.StudyViewModelFactory
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import java.time.LocalTime
 
 
 @Composable
 fun StudyScreen(
     navController: NavController,
-    vm: StudyViewModel = viewModel(factory = StudyViewModelFactory()),
+    vm: StudyViewModel, // Remove default parameter to force using passed ViewModel
     onOpenGrid: () -> Unit = {}
 ) {
     val ui by vm.ui.collectAsState()
@@ -50,7 +51,7 @@ fun StudyScreen(
                 .statusBarsPadding()
         ) {
             GreetingHeader(
-                greeting = "GOOD MORNING",
+                greeting = ui.greeting,
                 name = ui.displayName,
                 avatar = painterResource(id = R.drawable.study_mate_header)
             )

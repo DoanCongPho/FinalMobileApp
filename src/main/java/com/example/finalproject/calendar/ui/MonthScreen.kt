@@ -1,4 +1,4 @@
-package com.example.finalproject.auth.register.ui
+package com.example.finalproject.calendar.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
