@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10") // Add Kotlin standard library directly
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3") // Add coroutines
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")

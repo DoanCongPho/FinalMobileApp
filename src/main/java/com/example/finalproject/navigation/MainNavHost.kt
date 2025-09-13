@@ -359,9 +359,12 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 com.example.finalproject.createquiz.ui.ManualQuizScreen(
                     viewModel = vm,
                     onFinish = {
-                        navController.navigate("create_quiz/success?quizId=manual_dev") {
-                            popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
-                            launchSingleTop = true
+                        // Call the real API instead of hardcoded navigation
+                        vm.submitQuiz(title = "Manual Quiz") { realQuizId ->
+                            navController.navigate("create_quiz/success?quizId=$realQuizId") {
+                                popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     },
                     onBack = { navController.popBackStack() }
@@ -392,6 +395,14 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 viewModel = quizViewModel
             )
         }
+        
+        // Temporarily disabled API test screen due to compilation issues
+        // composable("api_test") {
+        //     com.example.finalproject.test.QuizApiTestScreen(
+        //         tokenManager = tokenManager,
+        //         onBack = { navController.popBackStack() }
+        //     )
+        // }
 
     }
 }

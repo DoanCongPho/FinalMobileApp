@@ -50,6 +50,7 @@ sealed class Screen(val route: String) {
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
     object CreateQuizMode : Screen("create_quiz/mode")
     object CreateQuizManual : Screen("create_quiz/manual")
+    object ApiTest : Screen("api_test")
     object Main: Screen("main")
     object NewMessage: Screen("newMessage")
     object CreateGroup: Screen("createGroup")

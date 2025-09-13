@@ -1,20 +1,38 @@
 package com.example.finalproject.createquiz.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import com.example.finalproject.createquiz.model.ManualQuestion
+import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.core.DataStore.TokenManager
+import com.example.finalproject.createquiz.model.QuizCreateRequest
+import com.example.finalproject.createquiz.model.QuizQuestionCreateRequest
+import com.example.finalproject.journey.model.Quiz
 
 data class ManualUiState(
     val items: List<ManualQuestion> = emptyList(),
     val draftQuestion: String = "",
     val draftAnswer: String = "",
     val canSubmit: Boolean = false,
-    val showEmptyError: Boolean = false
+    val showEmptyError: Boolean = false,
+    val isSubmitting: Boolean = false,
+    val error: String? = null,
+    val createdQuizId: Int? = null
 )
 
-class ManualQuizViewModel : ViewModel() {
+class ManualQuizViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val tokenManager = TokenManager.getInstance(application.applicationContext)
+    private val apiClient = ApiClient.create(tokenManager)
+    private val quizApi = apiClient.quizApi
 
     private val _state = MutableStateFlow(ManualUiState())
     val state: StateFlow<ManualUiState> = _state
@@ -56,4 +74,81 @@ class ManualQuizViewModel : ViewModel() {
     }
 
     fun currentFlashcards(): List<ManualQuestion> = _state.value.items
+    
+    // Real API implementation
+    fun submitQuiz(title: String? = null, onSuccess: (Int) -> Unit) {
+        val s = _state.value
+        if (!s.canSubmit) return
+        
+        viewModelScope.launch {
+            _state.update { it.copy(isSubmitting = true, error = null) }
+            
+            try {
+                // Get access token
+                val token = tokenManager.accessToken.first()
+                
+                if (token.isNullOrBlank()) {
+                    _state.update { 
+                        it.copy(
+                            isSubmitting = false, 
+                            error = "Authentication required. Please log in again."
+                        ) 
+                    }
+                    return@launch
+                }
+                
+                // Convert ManualQuestion to QuizQuestionCreateRequest
+                val questions = s.items.map { question ->
+                    QuizQuestionCreateRequest(
+                        question = question.question,
+                        answer = question.answer,
+                        explanation = null
+                    )
+                }
+                
+                // Create the quiz request
+                val request = QuizCreateRequest(
+                    title = title ?: "Manual Quiz",
+                    questions = questions
+                )
+                
+                // Make the API call
+                val response = quizApi.createQuiz(request)
+                
+                if (response.isSuccessful) {
+                    val quiz = response.body()
+                    val quizId = quiz?.id ?: 0
+                    
+                    _state.update { 
+                        it.copy(
+                            isSubmitting = false, 
+                            createdQuizId = quizId,
+                            items = listOf(), // Clear form
+                            draftQuestion = "",
+                            draftAnswer = "",
+                            canSubmit = false
+                        ) 
+                    }
+                    onSuccess(quizId)
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: "Failed to create quiz"
+                    
+                    _state.update { 
+                        it.copy(
+                            isSubmitting = false, 
+                            error = "Server Error (${response.code()}): $errorMsg"
+                        ) 
+                    }
+                }
+                
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        isSubmitting = false, 
+                        error = "Network error: ${e.message ?: "Unknown error occurred"}"
+                    ) 
+                }
+            }
+        }
+    }
 }
