@@ -2,7 +2,6 @@ package com.example.finalproject.chatting.data
 
 import android.util.Log
 import com.example.finalproject.chatting.model.Message
-import com.example.finalproject.chatting.model.CreateMessageRequest
 import com.example.finalproject.core.network.api.chat.ConversationMessageApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -12,13 +11,19 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
 
-fun String.toRequestBody(): RequestBody =
-    RequestBody.create("text/plain".toMediaTypeOrNull(), this)
 
 fun File.toMultipartBody(name: String): MultipartBody.Part {
-    val requestFile = this.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+    val mimeType = when (extension.lowercase()) {
+        "png" -> "image/png"
+        "jpg", "jpeg" -> "image/jpeg"
+        "pdf" -> "application/pdf"
+        else -> "application/octet-stream"
+    }
+
+    val requestFile = this.asRequestBody(mimeType.toMediaTypeOrNull())
     return MultipartBody.Part.createFormData(name, this.name, requestFile)
 }
+
 
 
 class MessageRepository(private val api: ConversationMessageApi) {
@@ -75,4 +80,19 @@ class MessageRepository(private val api: ConversationMessageApi) {
             Result.failure(e)
         }
     }
+
+    suspend fun getAttachment(
+        conversationId: Int,
+        messageId: Int,
+        attachmentId: Int
+    ): Result<ByteArray> {
+        return try {
+            val res = api.getAttachment(conversationId, messageId, attachmentId)
+            Result.success(res.bytes())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }

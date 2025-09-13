@@ -397,10 +397,14 @@ object CalendarRepository1 {
                 }
             } else {
                 Log.e("CalendarRepository1", "Failed to update task list: ${response?.code()}")
+                response?.errorBody()?.string()?.let { errorBody ->
+                    Log.e("CalendarRepository1", "Error body: $errorBody")
+                }
                 null
             }
         } catch (e: Exception) {
             Log.e("CalendarRepository1", "Error updating task list: ${e.message}")
+            e.printStackTrace()
             null
         }
     }

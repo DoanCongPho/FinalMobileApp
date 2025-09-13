@@ -36,7 +36,9 @@ sealed class Screen(val route: String) {
     object Chat: Screen("chat")
     object Account: Screen("account")
     object DailySchedule : Screen("daily_schedule/{date}")
+    object TaskActionSelection : Screen("task_action_selection/{date}")
     object AddTask : Screen("add_task/{date}")
+    object AddTasklist : Screen("add_tasklist")
     object EditTask : Screen("edit_task/{taskId}")
     object TaskDetail : Screen("task_detail/{taskId}")
     object CustomRecurrence : Screen("custom_recurrence/{frequency}")
@@ -54,7 +56,8 @@ sealed class Screen(val route: String) {
     object ApiTest : Screen("api_test")
     object Main: Screen("main")
     object NewMessage: Screen("newMessage")
-    object CreateGroup: Screen("createGroup")
+    object ChatGpt: Screen("chatGpt")
+
 }
 
 
@@ -66,7 +69,7 @@ fun AppNavigation(navController: NavHostController) {
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },

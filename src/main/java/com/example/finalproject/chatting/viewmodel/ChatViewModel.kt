@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 import org.json.JSONObject
+import java.io.File
+
 class ChatRoomManagerViewModel(
     private val conversationRepo: ConversationRepository,
     private val messageRepo: MessageRepository,
@@ -139,7 +141,20 @@ class ChatRoomManagerViewModel(
     }
 
     private fun parseMessage(data: JSONObject): Message {
-        // parse message từ JSON
+        val attachments = if (data.has("attachments")) {
+            val arr = data.getJSONArray("attachments")
+            (0 until arr.length()).map { i ->
+                val obj = arr.getJSONObject(i)
+                Attachment(
+                    id = obj.getInt("id"),
+                    filename = obj.getString("filename"),
+                    content_type = obj.getString("content_type"),
+                    file_size = obj.getInt("file_size"),
+                    url = "https://studymate.beerpsi.cc/api/v1/attachments/${obj.getInt("id")}" // build link
+                )
+            }
+        } else emptyList()
+
         return Message(
             id = data.getInt("id"),
             conversationId = data.getInt("conversation_id"),
@@ -149,9 +164,10 @@ class ChatRoomManagerViewModel(
             createdAt = data.getString("created_at"),
             updatedAt = data.getString("updated_at"),
             editedAt = if (data.isNull("edited_at")) null else data.getString("edited_at"),
-            attachments = emptyList()
+            attachments = attachments
         )
     }
+
 
     private fun parseConversation(data: JSONObject): Conversation {
         // parse conversation từ JSON
@@ -167,19 +183,23 @@ class ChatRoomManagerViewModel(
         )
     }
 
-    fun sendMessage(convoId: Int, content: String) {
-        if (content.isBlank()) return
+    fun sendMessage(convoId: Int, content: String, files: List<File> = emptyList()) {
+        if (content.isBlank() && files.isEmpty()) return
+
         viewModelScope.launch {
             try {
-                val result = messageRepo.sendMessage(convoId, content)
+                val result = messageRepo.sendMessage(convoId, content, null, files)
                 if (result.isSuccess) {
                     val newMsg = result.getOrThrow()
                     val stateFlow = _messagesMap.getOrPut(convoId) { MutableStateFlow(emptyList()) }
                     stateFlow.value = listOf(newMsg) + stateFlow.value
                 }
-            } catch (e: Exception) { e.printStackTrace() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
+
 
     override fun onCleared() {
         super.onCleared()
@@ -303,6 +323,19 @@ class ChatRoomManagerViewModel(
             }
         }
     }
+    fun downloadAttachment(
+        conversationId: Int,
+        messageId: Int,
+        attachmentId: Int,
+        onResult: (Result<ByteArray>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = messageRepo.getAttachment(conversationId, messageId, attachmentId)
+            onResult(result)
+        }
+    }
+
+
 
 }
 

@@ -71,6 +71,7 @@ class CalendarViewModelFactory(private val repo: CalendarRepository) : ViewModel
 
 class CalendarViewModel1(): ViewModel() {
     val tasks = CalendarRepository1.getTasks() // tasks là mutableStateListOf
+    val taskLists = CalendarRepository1.getTaskLists() // taskLists là mutableStateListOf
     
     // Draft task state for preserving data during navigation
     private var _draftTask: com.example.finalproject.Tasks.model.CalendarTask? = null
@@ -78,14 +79,13 @@ class CalendarViewModel1(): ViewModel() {
         get() = _draftTask
 
     init {
-        viewModelScope.launch {
-            CalendarRepository1.loadTasksFromApi()
-        }
+        // API initialization and loading happens in MainNavHost
     }
 
     fun loadTasks() {
         viewModelScope.launch {
             CalendarRepository1.loadTasksFromApi()
+            CalendarRepository1.loadTaskListsFromApi()
         }
     }
 
@@ -131,6 +131,29 @@ class CalendarViewModel1(): ViewModel() {
     fun updateDraftTask(updates: (com.example.finalproject.Tasks.model.CalendarTask) -> com.example.finalproject.Tasks.model.CalendarTask) {
         _draftTask?.let { draft ->
             _draftTask = updates(draft)
+        }
+    }
+    
+    // Task Lists management methods
+    suspend fun createTaskList(name: String): Boolean {
+        return CalendarRepository1.createTaskList(name)
+    }
+    
+    suspend fun updateTaskList(taskListId: Int, name: String): Boolean {
+        return CalendarRepository1.updateTaskList(taskListId, name)
+    }
+    
+    suspend fun deleteTaskList(taskListId: Int): Boolean {
+        return CalendarRepository1.deleteTaskList(taskListId)
+    }
+    
+    suspend fun getTaskList(taskListId: Int): com.example.finalproject.Tasks.model.CalendarTasklist? {
+        return CalendarRepository1.getTaskList(taskListId)
+    }
+    
+    fun loadTaskLists() {
+        viewModelScope.launch {
+            CalendarRepository1.loadTaskListsFromApi()
         }
     }
 }

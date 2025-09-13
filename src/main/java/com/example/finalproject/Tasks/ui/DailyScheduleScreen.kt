@@ -10,11 +10,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 
 import com.example.finalproject.Tasks.model.CalendarTask
+import com.example.finalproject.Tasks.model.CalendarTasklist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
@@ -30,15 +34,18 @@ import androidx.compose.ui.res.painterResource
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import com.example.finalproject.Tasks.ui.HourRow
+import com.example.finalproject.Tasks.ui.getDrawableId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyScheduleScreen(
     date: String,
     tasks: List<CalendarTask>,
+    taskLists: List<CalendarTasklist>,
     modifier: Modifier = Modifier,
     onTaskClick: (String) -> Unit,
     onAddClick: () -> Unit,
+    onAddTaskListClick: () -> Unit,
     onBack: () -> Unit
 ) {
     // Parse date string to LocalDate
@@ -66,10 +73,13 @@ fun DailyScheduleScreen(
                             fontSize = 18.sp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Image(
-                            painter = painterResource(id = getDrawableId("small_plane_button")),
-                            contentDescription = "Small Plane",
-                            modifier = Modifier.size(24.dp)
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Add Task List",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable { onAddTaskListClick() }
                         )
                     }
                 },

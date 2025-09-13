@@ -14,9 +14,10 @@ import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 
 @Composable
 fun QuizMainScreen(
-    navController: NavHostController = rememberNavController(),
+    parentNavController: NavHostController? = null,
     viewModel: QuizViewModel
 ) {
+    val navController = rememberNavController()
     
     NavHost(
         navController = navController,
@@ -32,7 +33,8 @@ fun QuizMainScreen(
             OverallStatsScreen(
                 quizzes = quizzes,
                 onClose = {
-                    // Handle close action - could navigate back to main app or do nothing
+                    // Use parent navController to go back to the previous screen in MainNavHost
+                    parentNavController?.popBackStack()
                 },
                 onSwitchToDetail = {
                     navController.navigate("quiz_list")
@@ -47,6 +49,9 @@ fun QuizMainScreen(
                 },
                 onSwitchToStats = {
                     navController.navigate("overall_stats")
+                },
+                onBack = {
+                    navController.popBackStack()
                 },
                 viewModel = viewModel
             )

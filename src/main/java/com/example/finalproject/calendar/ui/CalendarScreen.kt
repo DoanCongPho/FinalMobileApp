@@ -18,13 +18,14 @@ import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.main.ui.BottomNavigationBar
-import com.example.finalproject.navigation.Screen
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.compose.foundation.clickable
+import com.example.finalproject.calendar.viewmodel.CalendarViewModel1
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -72,10 +73,7 @@ fun CalendarScreen(
                 
                 CalendarGrid(
                     selectedDate = uiState.selectedDate.toLocalDate(),
-                    onDateSelect = { selectedDate ->
-                        // Navigate to MonthScreen when any calendar date is clicked
-                        navController.navigate(Screen.Month.route)
-                    },
+                    onDateSelect = { /* Handle date selection */ },
                     events = taskDates
                 )
             }

@@ -1,6 +1,7 @@
 package com.example.finalproject.chatting.model
 
 
+import android.net.Uri
 import com.google.gson.annotations.SerializedName
 import java.io.File
 
@@ -25,8 +26,5 @@ data class Message(
 )
 
 
-data class CreateMessageRequest(
-    val content: String,
-    val reply_to_id: Int? = null,
-    val attachments: List<File>? = null
-)
+
+data class LocalAttachment(val uri: Uri, val name: String)

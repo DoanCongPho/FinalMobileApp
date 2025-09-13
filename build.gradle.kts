@@ -67,6 +67,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("androidx.datastore:datastore-core:1.1.7")
     implementation("androidx.datastore:datastore-preferences-rxjava3:1.1.7")
+    implementation ("androidx.browser:browser:1.5.0")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
