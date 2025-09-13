@@ -51,7 +51,7 @@ fun QuizMainScreen(
                     navController.navigate("overall_stats")
                 },
                 onBack = {
-                    navController.popBackStack()
+                    parentNavController?.popBackStack()
                 },
                 viewModel = viewModel
             )
