@@ -46,6 +46,11 @@ class LoginViewModel(
                 if (userRes.isSuccess) {
                     val user = userRes.getOrNull()
                     tokenManager.saveUserId(user?.id ?: 0)
+                    tokenManager.saveUserProfile(
+                        name = user?.name,
+                        email = user?.email,
+                        phone = user?.phoneNumber
+                    )
                 }
                 onSuccess()
             }
@@ -83,4 +88,3 @@ class LoginViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
