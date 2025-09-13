@@ -52,7 +52,8 @@ sealed class Screen(val route: String) {
     object CreateQuizManual : Screen("create_quiz/manual")
     object Main: Screen("main")
     object NewMessage: Screen("newMessage")
-    object CreateGroup: Screen("createGroup")
+    object ChatGpt: Screen("chatGpt")
+
 }
 
 
@@ -64,7 +65,7 @@ fun AppNavigation(navController: NavHostController) {
 
 
 
-    NavHost(navController = navController, startDestination = Screen.Authen.route) {
+    NavHost(navController = navController, startDestination = Screen.Main.route) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },

@@ -3,6 +3,7 @@ package com.example.finalproject.navigation
 import ChatListScreen
 import ChatScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,8 +35,6 @@ import com.example.finalproject.chatting.ui.AddConversationScreen
 import com.example.finalproject.chatting.viewmodel.AddConversationChatRoomViewModelFactory
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModel
 import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFactory
-
-import com.example.finalproject.chatting.viewmodel.ConversationViewModel
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
 import com.example.finalproject.createquiz.data.CreateQuizRepository
@@ -48,6 +47,7 @@ import com.example.finalproject.journey.viewmodel.QuizViewModel
 import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.study.ui.StudyScreen
+import openCustomTab
 import java.time.LocalDate
 
 
@@ -86,7 +86,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                     navController.navigate("chatScreen/$conversationId/$displayName")
                 },
                 onNewMessageClick = { navController.navigate(Screen.NewMessage.route) },
-
+                onChatGpt = { navController.navigate(Screen.ChatGpt.route) }
             )
         }
 
@@ -392,6 +392,15 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 viewModel = quizViewModel
             )
         }
+        composable(Screen.ChatGpt.route) {
+            val context = LocalContext.current
+            LaunchedEffect(Unit) {
+                openCustomTab(context, "https://gemini.google.com/app")
+                // Sau khi mở tab, quay lại màn hình trước (nếu muốn)
+                // navController.popBackStack()
+            }
+        }
+
 
     }
 }
