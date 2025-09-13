@@ -25,6 +25,9 @@ import com.example.finalproject.R
 import com.example.finalproject.study.ui.components.*
 import com.example.finalproject.study.viewmodel.StudyViewModel
 import com.example.finalproject.study.viewmodel.StudyViewModelFactory
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 @Composable
 fun StudyScreen(
@@ -33,6 +36,7 @@ fun StudyScreen(
     onOpenGrid: () -> Unit = {}
 ) {
     val ui by vm.ui.collectAsState()
+    val scrollState = rememberScrollState()
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -41,6 +45,7 @@ fun StudyScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
                 .statusBarsPadding()
         ) {
@@ -50,36 +55,28 @@ fun StudyScreen(
                 avatar = painterResource(id = R.drawable.study_mate_header)
             )
 
-            // Quote card with gradient + illustration
             QuoteCard(
                 text = ui.quote?.text ?: "A Quote Here",
                 modifier = Modifier.padding(top = 16.dp)
             )
-
-            TopicChips(
-                topics = ui.topics,
-                selectedIds = ui.selectedTopicIds,
-                onToggle = vm::toggleTopic,
-                modifier = Modifier.padding(top = 16.dp)
-            )
-
-            Spacer(Modifier.height(60.dp))
+            Spacer(Modifier.height(12.dp))
 
             BigActionButton(
                 label = "Review",
                 onClick = { navController.navigate("review") },
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(top = 16.dp)
             )
             BigActionButton(
                 label = "Pomodoro",
                 onClick = { navController.navigate("pomodoro") },
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(top = 16.dp)
             )
             BigActionButton(
                 label = "Your Journey",
                 onClick = { navController.navigate("quiz") },
-                modifier = Modifier.padding(top = 24.dp, bottom = 24.dp)
+                modifier = Modifier.padding(top = 16.dp, bottom = 24.dp)
             )
         }
     }
 }
+
