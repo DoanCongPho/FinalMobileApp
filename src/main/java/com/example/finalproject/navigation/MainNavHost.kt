@@ -140,12 +140,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
 
 
         composable(Screen.Calendar.route) {
-            val vm: CalendarViewModel =
-                viewModel(factory = CalendarViewModelFactory(CalendarRepository(FakeCalendarApi)))
-            val taskViewModel: TaskViewModel = viewModel()
             CalendarScreen(
-                viewModel = vm,
-                taskViewModel = taskViewModel,
+                viewModel = calendarViewModel,
                 navController = navController
             )
         }
