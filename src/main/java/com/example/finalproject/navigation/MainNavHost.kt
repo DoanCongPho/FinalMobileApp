@@ -20,7 +20,7 @@ import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
-import com.example.finalproject.auth.register.ui.MonthScreen
+import com.example.finalproject.calendar.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
@@ -39,6 +39,8 @@ import com.example.finalproject.chatting.viewmodel.ChatRoomManagerViewModelFacto
 import com.example.finalproject.chatting.viewmodel.ConversationViewModel
 import com.example.finalproject.core.DataStore.TokenManager
 import com.example.finalproject.core.network.api.ApiClient
+import com.example.finalproject.study.viewmodel.StudyViewModel
+import com.example.finalproject.study.viewmodel.StudyViewModelFactory
 import com.example.finalproject.createquiz.data.CreateQuizRepository
 import com.example.finalproject.createquiz.data.CreateQuizViewModelFactory
 import com.example.finalproject.createquiz.viewmodel.CreateQuizViewModel
@@ -93,7 +95,12 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
 
 
         composable(Screen.Study.route) {
-             StudyScreen(navController = navController)
+            val context = LocalContext.current
+            val tokenManager = remember { TokenManager.getInstance(context) }
+            val studyViewModel: StudyViewModel = viewModel(
+                factory = StudyViewModelFactory(tokenManager = tokenManager)
+            )
+            StudyScreen(navController = navController, vm = studyViewModel)
         }
 
         composable(Screen.Account.route) {
@@ -300,15 +307,16 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         }
 
         composable(Screen.Study.route) {
-            StudyScreen(navController = navController)
+            val context = LocalContext.current
+            val tokenManager = remember { TokenManager.getInstance(context) }
+            val studyViewModel: StudyViewModel = viewModel(
+                factory = StudyViewModelFactory(tokenManager = tokenManager)
+            )
+            StudyScreen(navController = navController, vm = studyViewModel)
         }
         composable(Screen.Pomodoro.route) {
             PomodoroScreen(navController)
         }
-
-
-
-
 
         composable(Screen.Review.route) {
             // supply your DI repo here; replace FakeReviewRepository with real one when ready
@@ -331,7 +339,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             composable(Screen.CreateQuizMode.route) {
                 com.example.finalproject.createquiz.ui.ChooseModeScreen(
                     onCreateByAI = { navController.navigate(Screen.CreateQuizChoose.route) },
-                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) }
+                    onCreateManual = { navController.navigate(Screen.CreateQuizManual.route) },
+                    onBack = { navController.popBackStack() }
                 )
             }
 

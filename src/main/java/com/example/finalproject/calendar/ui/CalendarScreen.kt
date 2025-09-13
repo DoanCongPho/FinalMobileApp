@@ -18,6 +18,7 @@ import com.example.finalproject.calendar.viewmodel.CalendarViewModel
 import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.main.ui.BottomNavigationBar
+import com.example.finalproject.navigation.Screen
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -71,7 +72,10 @@ fun CalendarScreen(
                 
                 CalendarGrid(
                     selectedDate = uiState.selectedDate.toLocalDate(),
-                    onDateSelect = { /* Handle date selection */ },
+                    onDateSelect = { selectedDate ->
+                        // Navigate to MonthScreen when any calendar date is clicked
+                        navController.navigate(Screen.Month.route)
+                    },
                     events = taskDates
                 )
             }

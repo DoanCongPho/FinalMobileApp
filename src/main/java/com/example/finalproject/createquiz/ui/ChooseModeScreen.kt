@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -16,14 +17,24 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ChooseModeScreen(
     onCreateByAI: () -> Unit,
-    onCreateManual: () -> Unit
+    onCreateManual: () -> Unit,
+    onBack: () -> Unit
 ) {
     Surface(Modifier.fillMaxSize(), color = Color(0xFF6B5BFF)) {
         Column(
             Modifier.fillMaxSize().padding(16.dp).statusBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("CreateQuiz", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Spacer(Modifier.width(8.dp))
+                Text("CreateQuiz", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            }
             Spacer(Modifier.height(16.dp))
 
             Surface(
