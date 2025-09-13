@@ -1,10 +1,9 @@
 import android.content.Context
 import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 
+
+import androidx.browser.customtabs.CustomTabsIntent
 fun openCustomTab(context: Context, url: String) {
-    val customTabsIntent = CustomTabsIntent.Builder()
-        .setShowTitle(true)
-        .build()
-    customTabsIntent.launchUrl(context, Uri.parse(url))
+    val intent = CustomTabsIntent.Builder().build()
+    intent.launchUrl(context, Uri.parse(url))
 }

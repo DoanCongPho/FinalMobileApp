@@ -103,9 +103,13 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                     navController.navigate("chatScreen/$conversationId/$displayName")
                 },
                 onNewMessageClick = { navController.navigate(Screen.NewMessage.route) },
-                onChatGpt = { navController.navigate(Screen.ChatGpt.route) }
+                onChatGpt = {
+                    // mở ChatGPT ngoài browser
+                    openCustomTab(context, "https://chat.openai.com/")
+                }
             )
         }
+
 
 
         composable(Screen.Study.route) {

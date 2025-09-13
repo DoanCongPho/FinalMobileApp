@@ -1,6 +1,7 @@
 package com.example.finalproject.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,7 +20,6 @@ import com.example.finalproject.auth.register.ui.RegisterScreen
 import com.example.finalproject.auth.register.ui.SuccessRegistrationScreen
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModel
 import com.example.finalproject.auth.register.viewmodel.RegisterViewModelFactory
-
 import com.example.finalproject.core.network.api.ApiClient
 
 import com.example.finalproject.core.DataStore.TokenManager
@@ -41,7 +41,6 @@ sealed class Screen(val route: String) {
     object AddTasklist : Screen("add_tasklist")
     object EditTask : Screen("edit_task/{taskId}")
     object TaskDetail : Screen("task_detail/{taskId}")
-    object CustomRecurrence : Screen("custom_recurrence/{frequency}")
     object Ends : Screen("ends")
     object Month: Screen("month")
     object Pomodoro: Screen("pomodoro")
@@ -53,7 +52,6 @@ sealed class Screen(val route: String) {
     object CreateQuizSuccess : Screen("create_quiz/success?quizId={quizId}")
     object CreateQuizMode : Screen("create_quiz/mode")
     object CreateQuizManual : Screen("create_quiz/manual")
-    object ApiTest : Screen("api_test")
     object Main: Screen("main")
     object NewMessage: Screen("newMessage")
     object ChatGpt: Screen("chatGpt")
@@ -67,9 +65,20 @@ fun AppNavigation(navController: NavHostController) {
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
 
+    // Collect token value as State
+    val tokenState = tokenManager.accessToken.collectAsState(initial = null)
+    val token = tokenState.value
 
 
-    NavHost(navController = navController, startDestination = Screen.Main.route) {
+    // Decide start destination
+    val startDestination = if (token.isNullOrEmpty()) {
+        Screen.Authen.route
+    } else {
+        Screen.Main.route
+    }
+
+
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Authen.route) {
             AuthenPage(
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
