@@ -37,7 +37,8 @@ fun QuizDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(WindowInsets.statusBars.asPaddingValues())
+                .padding(horizontal = 24.dp),
         ) {
             // Quiz Information Section
             Card(
