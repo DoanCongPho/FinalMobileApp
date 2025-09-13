@@ -15,10 +15,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.finalproject.Tasks.ui.AddTaskScreen
+import com.example.finalproject.Tasks.ui.AddTasklistScreen
 import com.example.finalproject.Tasks.ui.CustomRecurrenceScreen
 import com.example.finalproject.Tasks.ui.DailyScheduleScreen
 import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
+import com.example.finalproject.Tasks.ui.TaskActionSelectionScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
@@ -57,6 +59,13 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val context = LocalContext.current
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
+    
+    // Initialize TaskListApi in the repository
+    LaunchedEffect(Unit) {
+        com.example.finalproject.calendar.data.CalendarRepository1.setTaskListApi(apiHolder.taskListApi)
+        calendarViewModel.loadTasks()
+    }
+    
     val conversationRepo = ConversationRepository(apiHolder.conversationApi)
     val messageRepo = MessageRepository(apiHolder.messageApi)
 
@@ -159,14 +168,19 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
 //          val taskViewModel: TaskViewModel = viewModel()
             val date = LocalDate.parse(dateString)
             val tasks = calendarViewModel.tasks.filter { it.date == date }
+            val taskLists = calendarViewModel.taskLists
             DailyScheduleScreen(
                 date = dateString,
                 tasks = tasks,
+                taskLists = taskLists,
                 onTaskClick = { taskId ->
                     navController.navigate("task_detail/$taskId")
                 },
                 onAddClick = {
-                    navController.navigate("add_task/$date")
+                    navController.navigate("task_action_selection/$dateString")
+                },
+                onAddTaskListClick = {
+                    navController.navigate(Screen.AddTasklist.route)
                 },
                 onBack = {
                     navController.popBackStack()
@@ -194,7 +208,36 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                     navController.popBackStack()
                 },
                 onCustomRecurrence = customRecurrenceCallback,
-                calendarViewModel = calendarViewModel
+                calendarViewModel = calendarViewModel,
+                onNavigateToAddTaskList = {
+                    navController.navigate(Screen.AddTasklist.route)
+                }
+            )
+        }
+        
+        composable(Screen.TaskActionSelection.route) { backStackEntry ->
+            val dateString = backStackEntry.arguments?.getString("date") ?: ""
+            
+            TaskActionSelectionScreen(
+                onAddTask = {
+                    navController.navigate("add_task/$dateString")
+                },
+                onAddTaskList = {
+                    navController.navigate(Screen.AddTasklist.route)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable(Screen.AddTasklist.route) {
+            val taskLists = calendarViewModel.taskLists
+            
+            AddTasklistScreen(
+                taskLists = taskLists,
+                calendarViewModel = calendarViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -239,7 +282,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                         navController.popBackStack()
                     },
                     onCustomRecurrence = customRecurrenceCallback,
-                    calendarViewModel = calendarViewModel
+                    calendarViewModel = calendarViewModel,
+                    onNavigateToAddTaskList = {
+                        navController.navigate(Screen.AddTasklist.route)
+                    }
                 )
             } else {
                 // fallback UI if task not found
@@ -389,6 +435,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 factory = QuizViewModelFactory(QuizRepository(apiHolder.quizApi))
             )
             QuizMainScreen(
+                parentNavController = navController,
                 viewModel = quizViewModel
             )
         }

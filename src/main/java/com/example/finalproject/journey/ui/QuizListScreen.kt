@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -40,6 +41,7 @@ enum class FilterPeriod {
 fun QuizListScreen(
     onQuizClick: (Quiz) -> Unit,
     onSwitchToStats: () -> Unit,
+    onBack: () -> Unit,
     viewModel: QuizViewModel
 ) {
     val quizzes by viewModel.quizzes
@@ -60,6 +62,24 @@ fun QuizListScreen(
     }
 
     Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+            }
+        },
         containerColor = Color(0xFF7C4DFF) // Purple background
     ) { paddingValues ->
         Column(
@@ -143,14 +163,13 @@ fun QuizListScreen(
                     ) {
                         ExposedDropdownMenuBox(
                             expanded = isDropdownExpanded,
-                            onExpandedChange = { isDropdownExpanded = !isDropdownExpanded },
+                            onExpandedChange = { isDropdownExpanded = it },
                             modifier = Modifier.align(Alignment.TopEnd)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .menuAnchor()
-                                    .clickable { isDropdownExpanded = !isDropdownExpanded }
                                     .padding(8.dp)
                             ) {
                                 Text(

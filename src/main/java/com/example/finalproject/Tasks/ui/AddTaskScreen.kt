@@ -5,8 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -22,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.model.RepeatEnd
+import com.example.finalproject.Tasks.ui.getDrawableId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -31,7 +35,8 @@ fun AddTaskScreen(
     onCancel: () -> Unit,
     onSave: (CalendarTask) -> Unit,
     onCustomRecurrence: (RepeatFrequency) -> Unit,
-    calendarViewModel: com.example.finalproject.calendar.viewmodel.CalendarViewModel1
+    calendarViewModel: com.example.finalproject.calendar.viewmodel.CalendarViewModel1,
+    onNavigateToAddTaskList: () -> Unit
 ) {
     // Initialize state from draft task or defaults
     val now = remember { java.time.LocalDate.now() }
@@ -64,6 +69,25 @@ fun AddTaskScreen(
     var tag by remember { mutableStateOf(draftTask?.tag ?: "") }
     var isAllDay by remember { mutableStateOf(draftTask?.isAllDay ?: false) }
     
+    // Task list selection state
+    val taskLists = calendarViewModel.taskLists
+    // Set default to first task list or "My Tasks" if it exists
+    var selectedTaskListId by remember { 
+        mutableStateOf(
+            draftTask?.task_list_id ?: 
+            taskLists.find { it.task_list_name == "My Tasks" }?.task_list_id ?: 
+            taskLists.firstOrNull()?.task_list_id ?: 
+            0
+        ) 
+    }
+    var expanded by remember { mutableStateOf(false) }
+    
+    // Update tag when task list selection changes
+    LaunchedEffect(selectedTaskListId) {
+        val selectedTaskList = taskLists.find { it.task_list_id == selectedTaskListId }
+        tag = selectedTaskList?.task_list_name ?: ""
+    }
+    
     // Function to create current draft task from form state
     fun createCurrentDraft(): CalendarTask {
         return CalendarTask(
@@ -76,12 +100,13 @@ fun AddTaskScreen(
             repeatFrequency = repeat,
             repeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never,
             monthlyPattern = draftTask?.monthlyPattern,
-            tag = tag
+            tag = tag,
+            task_list_id = selectedTaskListId
         )
     }
     
     // Save draft whenever form data changes
-    LaunchedEffect(title, details, isAllDay, taskDate, time, repeat, tag) {
+    LaunchedEffect(title, details, isAllDay, taskDate, time, repeat, tag, selectedTaskListId) {
         if (title.isNotBlank() || details.isNotBlank() || tag.isNotBlank()) {
             calendarViewModel.saveDraftTask(createCurrentDraft())
         }
@@ -144,7 +169,7 @@ fun AddTaskScreen(
                 color = Color(0xFF1976D2),
                 fontSize = 18.sp,
                 modifier = Modifier.clickable {
-                    if (title.isBlank() || tag.isBlank()) {
+                    if (title.isBlank()) {
                         showWarning = true
                     } else {
                         val finalTask = CalendarTask(
@@ -157,8 +182,10 @@ fun AddTaskScreen(
                             repeatFrequency = repeat,
                             repeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never,
                             monthlyPattern = draftTask?.monthlyPattern,
-                            tag = tag
+                            tag = tag,
+                            task_list_id = selectedTaskListId
                         )
+
                         
                         // Add root task manually with calendarViewModel.addTask()
                         calendarViewModel.addTask(finalTask)
@@ -363,22 +390,68 @@ fun AddTaskScreen(
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            // Tag
+            // Task List Selection
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = getDrawableId("tag_icon")),
-                    contentDescription = "Tag icon",
+                Icon(
+                    imageVector = Icons.Default.List,
+                    contentDescription = "Task List",
+                    tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                TextField(
-                    value = tag,
-                    onValueChange = { tag = it },
-                    placeholder = { Text("Tag", color = Color(0xFF757575)) },
-                    textStyle = TextStyle(color = Color.Black),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().background(Color.White)
-                )
+                Box {
+                    // Display current selection
+                    Text(
+                        text = taskLists.find { it.task_list_id == selectedTaskListId }?.task_list_name ?: "Select Task List",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        modifier = Modifier
+                            .background(Color(0xFF333333), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .clickable { expanded = !expanded }
+                    )
+                    
+                    // Dropdown menu
+                    if (expanded) {
+                        Surface(
+                            modifier = Modifier
+                                .width(200.dp)
+                                .background(Color.White),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.White
+                        ) {
+                            Column {
+                                // Existing task lists
+                                taskLists.forEach { taskList ->
+                                    Text(
+                                        text = taskList.task_list_name,
+                                        color = Color.Black,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedTaskListId = taskList.task_list_id
+                                                expanded = false
+                                            }
+                                            .padding(12.dp)
+                                    )
+                                }
+                                
+                                // Add new task list option
+                                Text(
+                                    text = "+ Add New Task List",
+                                    color = Color(0xFF1976D2),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            expanded = false
+                                            onNavigateToAddTaskList()
+                                        }
+                                        .padding(12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
         // Warning dialog
@@ -386,7 +459,7 @@ fun AddTaskScreen(
             AlertDialog(
                 onDismissRequest = { showWarning = false },
                 title = { Text("Missing Info") },
-                text = { Text("Please enter both a title and a tag.") },
+                text = { Text("Please enter a title for the task.") },
                 confirmButton = {
                     Button(onClick = { showWarning = false }) { Text("OK") }
                 }
