@@ -23,7 +23,6 @@ import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskActionSelectionScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
-import com.example.finalproject.auth.register.ui.MonthScreen
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
 import com.example.finalproject.calendar.viewmodel.CalendarViewModel
@@ -52,6 +51,7 @@ import com.example.finalproject.journey.viewmodel.QuizViewModel
 import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
 import com.example.finalproject.pomodoro.ui.PomodoroScreen
 import com.example.finalproject.study.ui.StudyScreen
+import com.example.finalproject.calendar.ui.MonthScreen
 import openCustomTab
 import java.time.LocalDate
 
@@ -62,13 +62,13 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val context = LocalContext.current
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
-    
+
     // Initialize TaskListApi in the repository
     LaunchedEffect(Unit) {
         com.example.finalproject.calendar.data.CalendarRepository1.setTaskListApi(apiHolder.taskListApi)
         calendarViewModel.loadTasks()
     }
-    
+
     val conversationRepo = ConversationRepository(apiHolder.conversationApi)
     val messageRepo = MessageRepository(apiHolder.messageApi)
 
@@ -221,10 +221,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 }
             )
         }
-        
+
         composable(Screen.TaskActionSelection.route) { backStackEntry ->
             val dateString = backStackEntry.arguments?.getString("date") ?: ""
-            
+
             TaskActionSelectionScreen(
                 onAddTask = {
                     navController.navigate("add_task/$dateString")
@@ -237,10 +237,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 }
             )
         }
-        
+
         composable(Screen.AddTasklist.route) {
             val taskLists = calendarViewModel.taskLists
-            
+
             AddTasklistScreen(
                 taskLists = taskLists,
                 calendarViewModel = calendarViewModel,
