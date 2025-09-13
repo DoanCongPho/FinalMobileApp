@@ -180,6 +180,9 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                 onAddClick = {
                     navController.navigate("task_action_selection/$dateString")
                 },
+                onAddTaskListClick = {
+                    navController.navigate(Screen.AddTasklist.route)
+                },
                 onBack = {
                     navController.popBackStack()
                 }
@@ -206,7 +209,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                     navController.popBackStack()
                 },
                 onCustomRecurrence = customRecurrenceCallback,
-                calendarViewModel = calendarViewModel
+                calendarViewModel = calendarViewModel,
+                onNavigateToAddTaskList = {
+                    navController.navigate(Screen.AddTasklist.route)
+                }
             )
         }
         
@@ -277,7 +283,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
                         navController.popBackStack()
                     },
                     onCustomRecurrence = customRecurrenceCallback,
-                    calendarViewModel = calendarViewModel
+                    calendarViewModel = calendarViewModel,
+                    onNavigateToAddTaskList = {
+                        navController.navigate(Screen.AddTasklist.route)
+                    }
                 )
             } else {
                 // fallback UI if task not found

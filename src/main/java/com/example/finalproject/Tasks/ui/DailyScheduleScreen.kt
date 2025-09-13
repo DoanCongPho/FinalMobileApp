@@ -16,6 +16,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
@@ -42,6 +45,7 @@ fun DailyScheduleScreen(
     modifier: Modifier = Modifier,
     onTaskClick: (String) -> Unit,
     onAddClick: () -> Unit,
+    onAddTaskListClick: () -> Unit,
     onBack: () -> Unit
 ) {
     // Parse date string to LocalDate
@@ -69,10 +73,13 @@ fun DailyScheduleScreen(
                             fontSize = 18.sp
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Image(
-                            painter = painterResource(id = getDrawableId("small_plane_button")),
-                            contentDescription = "Small Plane",
-                            modifier = Modifier.size(24.dp)
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Add Task List",
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable { onAddTaskListClick() }
                         )
                     }
                 },
