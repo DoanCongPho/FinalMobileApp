@@ -39,6 +39,7 @@ sealed class Screen(val route: String) {
     object TaskActionSelection : Screen("task_action_selection/{date}")
     object AddTask : Screen("add_task/{date}")
     object AddTasklist : Screen("add_tasklist")
+    object TasksInTasklist : Screen("tasks_in_tasklist/{taskListId}")
     object EditTask : Screen("edit_task/{taskId}")
     object TaskDetail : Screen("task_detail/{taskId}")
     object Ends : Screen("ends")

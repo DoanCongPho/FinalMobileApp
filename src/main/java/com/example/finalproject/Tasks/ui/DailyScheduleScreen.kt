@@ -225,7 +225,11 @@ fun DailyScheduleScreen(
                     contentPadding = PaddingValues(bottom = 120.dp)
                 ) {
                     items((0..23).toList()) { hour ->
-                        HourRow(hour = hour, tasks = tasks, onTaskClick = { task -> onTaskClick(task.id) })
+                        // Filter tasks to only show non-all-day tasks for the specific date
+                        val timedTasksForDate = tasks.filter { 
+                            !it.isAllDay && it.date == parsedDate 
+                        }
+                        HourRow(hour = hour, tasks = timedTasksForDate, onTaskClick = { task -> onTaskClick(task.id) })
                     }
                 }
             }

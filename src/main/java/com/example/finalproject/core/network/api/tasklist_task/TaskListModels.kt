@@ -81,8 +81,8 @@ data class RecurrenceRange(
     @SerializedName("count")
     val count: Int? = null, // For numbered recurrence
     
-    @SerializedName("end_date")
-    val end_date: String? = null // For end_date recurrence (ISO 8601 format)
+    @SerializedName("end_at")
+    val end_at: String? = null // For end_date recurrence (ISO 8601 format) - note: it's end_at, not end_date
 )
 
 /**
@@ -93,7 +93,7 @@ data class TaskRecurrence(
     val pattern: RecurrencePattern,
     
     @SerializedName("range")
-    val range: RecurrenceRange
+    val range: RecurrenceRange? // Make nullable to handle "never" ending case
 )
 
 /**

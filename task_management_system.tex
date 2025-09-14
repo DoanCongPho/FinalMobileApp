@@ -1,0 +1,271 @@
+\subsection{Task Management System}
+
+The Task Management System is a comprehensive feature that allows users to organize, schedule, and track their tasks efficiently. The system follows the MVVM (Model-View-ViewModel) architecture pattern and implements a centralized repository pattern with singleton design for data management.
+
+\subsubsection{Architecture Overview}
+
+The task management system is built using the MVVM (Model-View-ViewModel) architecture pattern, which provides a clear separation of concerns and enables efficient data binding between the UI and business logic:
+
+\begin{itemize}
+    \item \textbf{Model Layer}: Consists of \texttt{CalendarTask} and \texttt{CalendarTasklist} data classes that represent the core entities
+    \item \textbf{ViewModel Layer}: \texttt{CalendarViewModel1} manages the UI state and coordinates between the View and Repository
+    \item \textbf{View Layer}: Compose UI screens that observe state changes and react to user interactions
+    \item \textbf{Repository Layer}: \texttt{CalendarRepository1} implements the singleton pattern to provide centralized data access
+\end{itemize}
+
+The system utilizes a singleton repository pattern through \texttt{CalendarRepository1}, which maintains \texttt{mutableStateListOf} collections for tasks and task lists. This design ensures real-time UI updates across all screens when data changes occur, as the Compose UI automatically recomposes when the observable state changes.
+
+\subsubsection{Month View Screen}
+
+The Month View serves as the primary entry point for the calendar system, providing users with a comprehensive monthly overview of their scheduled tasks.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/month_screen.png}
+    \caption{Month View Screen showing calendar grid with task indicators}
+    \label{fig:month_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Monthly calendar grid displaying all days of the current month
+    \item Task indicators on each day showing up to 2 task titles
+    \item "+X more" indicator when more than 2 tasks exist on a single day
+    \item Navigation controls for switching between months
+    \item Clickable day cells that navigate to the Daily Schedule Screen
+    \item Custom top app bar with search and navigation functionality
+\end{itemize}
+
+\textbf{Implementation Details:}
+The screen uses \texttt{LazyVerticalGrid} with 7 fixed columns to create the calendar layout. Each day cell displays tasks filtered by date using \texttt{tasks.filter \{ it.date == date \}}, demonstrating real-time data binding from the singleton repository.
+
+\subsubsection{Calendar Screen}
+
+The Calendar Screen provides an alternative view focusing on upcoming events and categorized task listings.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/calendar_screen.png}
+    \caption{Calendar Screen with categorized event listings}
+    \label{fig:calendar_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Calendar grid integration for date selection
+    \item Categorized event sections (Today, Tomorrow, Vacations)
+    \item Event cards with time and type indicators
+    \item Bottom navigation bar for app-wide navigation
+    \item Click-to-navigate functionality to Daily Schedule Screen
+\end{itemize}
+
+\subsubsection{Daily Schedule Screen}
+
+The Daily Schedule Screen provides a detailed hourly view of a specific day, allowing users to see both all-day tasks and time-specific appointments.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/daily_schedule_screen.png}
+    \caption{Daily Schedule Screen with hourly grid and task organization}
+    \label{fig:daily_schedule_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item All-day tasks section at the top of the screen
+    \item Hourly grid (6 AM to 11 PM) showing time-specific tasks
+    \item Task filtering: all-day tasks displayed in header, timed tasks in hourly slots
+    \item Floating action button for quick task addition
+    \item Task list management button for organizing tasks into categories
+    \item Click-to-edit functionality for existing tasks
+\end{itemize}
+
+\textbf{Technical Implementation:}
+The screen implements intelligent task filtering where \texttt{HourRow} components only receive tasks with \texttt{isAllDay = false}, while the header section displays all-day tasks separately. This prevents duplicate task display and ensures proper organization.
+
+\subsubsection{Task Action Selection Screen}
+
+This intermediate screen provides users with options for creating new tasks or managing task lists.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/task_action_selection.png}
+    \caption{Task Action Selection Screen}
+    \label{fig:task_action_selection}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item "Add Task" option for creating new individual tasks
+    \item "Add Task List" option for creating new task categories
+    \item Clean, intuitive interface with large touch targets
+    \item Date context preservation for task creation
+\end{itemize}
+
+\subsubsection{Add Task Screen}
+
+The Add Task Screen is a comprehensive form for creating new tasks with full scheduling and recurrence options.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/add_task_screen.png}
+    \caption{Add Task Screen with comprehensive task creation form}
+    \label{fig:add_task_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Task title and description input fields
+    \item Date and time picker integration
+    \item All-day task toggle option
+    \item Task list assignment dropdown
+    \item Recurrence pattern selection (Daily, Weekly, Monthly, Yearly)
+    \item Custom recurrence configuration
+    \item End date/occurrence limit settings
+    \item Form validation and error handling
+\end{itemize}
+
+\textbf{Advanced Recurrence System:}
+The system supports complex recurrence patterns including:
+\begin{itemize}
+    \item Weekly recurrence with specific day selection
+    \item Monthly recurrence with "same day" or "nth weekday" patterns
+    \item Custom end conditions (never, until date, after X occurrences)
+\end{itemize}
+
+\subsubsection{Task List Management Screen}
+
+The Add Task List Screen enables users to create and manage task categories with built-in protection for system lists.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/add_tasklist_screen.png}
+    \caption{Task List Management Screen}
+    \label{fig:add_tasklist_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Task list creation with custom names
+    \item Real-time task list display with ID information
+    \item Protected "My Tasks" list (cannot be edited or deleted)
+    \item Edit and delete functionality for custom task lists
+    \item Expand button for viewing tasks within each list
+    \item Refresh capability for syncing with server data
+    \item Confirmation dialogs for destructive operations
+\end{itemize}
+
+\textbf{Security Features:}
+The system implements UI-level protection where the "My Tasks" default list cannot be modified, ensuring system stability and preventing accidental deletion of default categories.
+
+\subsubsection{Tasks in Task List Screen}
+
+This dedicated screen displays all tasks belonging to a specific task list with visual status indicators.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/tasks_in_tasklist_screen.png}
+    \caption{Tasks in Task List Screen showing task status visualization}
+    \label{fig:tasks_in_tasklist_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Filtered task display showing only tasks from selected list
+    \item Visual status differentiation:
+        \begin{itemize}
+            \item Completed tasks: Light green background with strikethrough text
+            \item Pending tasks: Standard background with normal text
+        \end{itemize}
+    \item Task card information: Title, date, time, and completion status
+    \item Click-to-navigate functionality to Task Detail Screen
+    \item Empty state handling with informative messaging
+    \item Responsive card layout with proper spacing
+\end{itemize}
+
+\subsubsection{Task Detail Screen}
+
+The Task Detail Screen provides comprehensive task information and management options.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/task_detail_screen.png}
+    \caption{Task Detail Screen with full task information}
+    \label{fig:task_detail_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Complete task information display (title, description, date, time)
+    \item Task list category indicator
+    \item Visual completion status with strikethrough for completed tasks
+    \item Action buttons: Edit, Delete, and Close
+    \item Toggle completion status functionality
+    \item Confirmation dialogs for destructive operations
+    \item Hover effects on interactive elements
+\end{itemize}
+
+\subsubsection{Edit Task Screen}
+
+The Edit Task Screen allows users to modify existing tasks while preserving their structure and relationships.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/edit_task_screen.png}
+    \caption{Edit Task Screen with pre-populated fields}
+    \label{fig:edit_task_screen}
+\end{figure}
+
+\textbf{Key Features:}
+\begin{itemize}
+    \item Pre-populated form fields with existing task data
+    \item Full editing capabilities for all task properties
+    \item Series editing options for recurring tasks
+    \item Validation and error handling
+    \item Debug logging for troubleshooting task operations
+    \item Automatic UI updates upon successful modification
+\end{itemize}
+
+\subsubsection{Data Management and Real-Time Updates}
+
+\textbf{Singleton Repository Pattern:}
+The system implements \texttt{CalendarRepository1} as a singleton that maintains:
+\begin{itemize}
+    \item \texttt{mutableStateListOf<CalendarTask>} for tasks
+    \item \texttt{mutableStateListOf<CalendarTasklist>} for task lists
+    \item API integration for data persistence
+    \item Automatic local state synchronization
+\end{itemize}
+
+\textbf{Real-Time UI Updates:}
+The MVVM architecture enables automatic UI updates through:
+\begin{itemize}
+    \item \texttt{CalendarViewModel1} exposing repository state via properties
+    \item Compose UI observing \texttt{mutableStateListOf} collections
+    \item Automatic recomposition when data changes occur
+    \item Consistent state across all screens without manual refresh
+\end{itemize}
+
+\textbf{API Integration:}
+The system provides robust API integration with:
+\begin{itemize}
+    \item RESTful API calls for CRUD operations
+    \item Optimistic UI updates with rollback capability
+    \item Error handling and user feedback
+    \item Offline capability with local state management
+\end{itemize}
+
+\subsubsection{Navigation Flow and Data Passing}
+
+The navigation system implements a hierarchical flow:
+
+\begin{enumerate}
+    \item \textbf{Month Screen} $\rightarrow$ Daily Schedule (with date parameter)
+    \item \textbf{Daily Schedule} $\rightarrow$ Task Action Selection (preserving date context)
+    \item \textbf{Task Action Selection} $\rightarrow$ Add Task/Add Task List screens
+    \item \textbf{Add Task List} $\rightarrow$ Tasks in Task List (with task list ID)
+    \item \textbf{Tasks in Task List} $\rightarrow$ Task Detail (with task ID)
+    \item \textbf{Task Detail} $\rightarrow$ Edit Task (preserving task data)
+\end{enumerate}
+
+The navigation system preserves context through URL parameters and leverages the singleton repository to maintain data consistency across screen transitions, ensuring that users never lose their work or context when navigating through the application.

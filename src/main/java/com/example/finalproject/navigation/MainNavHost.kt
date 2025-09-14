@@ -24,6 +24,7 @@ import com.example.finalproject.Tasks.ui.EditTaskScreen
 import com.example.finalproject.Tasks.ui.EndsScreen
 import com.example.finalproject.Tasks.ui.TaskActionSelectionScreen
 import com.example.finalproject.Tasks.ui.TaskDetailScreen
+import com.example.finalproject.Tasks.ui.TasksInTasklistScreen
 import com.example.finalproject.Tasks.viewmodel.TaskViewModel
 import com.example.finalproject.calendar.data.CalendarRepository
 import com.example.finalproject.calendar.data.FakeCalendarApi
@@ -271,8 +272,31 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
             AddTasklistScreen(
                 taskLists = taskLists,
                 calendarViewModel = calendarViewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onExpandTasklist = { taskList ->
+                    navController.navigate("tasks_in_tasklist/${taskList.task_list_id}")
+                }
             )
+        }
+
+        composable(
+            route = Screen.TasksInTasklist.route,
+            arguments = listOf(navArgument("taskListId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val taskListId = backStackEntry.arguments?.getInt("taskListId") ?: 0
+            val taskList = calendarViewModel.taskLists.find { it.task_list_id == taskListId }
+            val tasksInList = calendarViewModel.tasks.filter { it.task_list_id == taskListId }
+            
+            if (taskList != null) {
+                TasksInTasklistScreen(
+                    taskList = taskList,
+                    tasks = tasksInList,
+                    onBack = { navController.popBackStack() },
+                    onTaskClick = { taskId ->
+                        navController.navigate("task_detail/$taskId")
+                    }
+                )
+            }
         }
 
         composable(Screen.TaskDetail.route) { backStackEntry ->

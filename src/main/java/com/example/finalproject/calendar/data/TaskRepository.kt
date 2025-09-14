@@ -623,17 +623,14 @@ object CalendarRepository1 {
         } ?: return null
         
         val range = when (task.repeatEnd) {
-            is RepeatEnd.Never -> RecurrenceRange(
-                type = "numbered",
-                count = 100 // Default large number for "never"
-            )
+            is RepeatEnd.Never -> null // For "never" ending, range should be null according to API
             is RepeatEnd.AfterOccurrences -> RecurrenceRange(
                 type = "numbered",
                 count = task.repeatEnd.count
             )
             is RepeatEnd.UntilDate -> RecurrenceRange(
                 type = "end_date",
-                end_date = task.repeatEnd.endDate.toString()
+                end_at = "${task.repeatEnd.endDate}T23:59:59Z" // Convert to ISO 8601 datetime format
             )
         }
         
@@ -683,17 +680,23 @@ object CalendarRepository1 {
         return when (recurrence?.range?.type) {
             "numbered" -> {
                 val count = recurrence.range.count ?: 1
-                if (count >= 100) RepeatEnd.Never else RepeatEnd.AfterOccurrences(count)
+                RepeatEnd.AfterOccurrences(count)
             }
             "end_date" -> {
-                val endDateStr = recurrence.range.end_date
+                val endDateStr = recurrence.range.end_at // Changed from end_date to end_at
                 val endDate = try {
-                    LocalDate.parse(endDateStr)
+                    // Parse the datetime and extract just the date part
+                    if (endDateStr?.contains('T') == true) {
+                        LocalDate.parse(endDateStr.split('T')[0])
+                    } else {
+                        LocalDate.parse(endDateStr)
+                    }
                 } catch (e: Exception) {
                     LocalDate.now().plusYears(1)
                 }
                 RepeatEnd.UntilDate(endDate)
             }
+            null -> RepeatEnd.Never // Handle null range as "never" ending
             else -> RepeatEnd.Never
         }
     }

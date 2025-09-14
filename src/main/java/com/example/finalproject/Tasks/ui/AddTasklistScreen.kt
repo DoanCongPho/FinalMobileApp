@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +28,8 @@ import kotlinx.coroutines.launch
 fun AddTasklistScreen(
     taskLists: List<CalendarTasklist>,
     calendarViewModel: CalendarViewModel1,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onExpandTasklist: (CalendarTasklist) -> Unit = {}
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var taskListName by remember { mutableStateOf("") }
@@ -172,33 +174,50 @@ fun AddTasklistScreen(
                                     )
                                 }
                                 
-                                // Edit button
+                                // Expand button (always visible)
                                 IconButton(
                                     onClick = {
-                                        editingTaskList = taskList
-                                        editTaskListName = taskList.task_list_name
-                                        showEditDialog = true
+                                        onExpandTasklist(taskList)
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Task List",
+                                        imageVector = Icons.Default.ExpandMore,
+                                        contentDescription = "View Tasks",
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 
-                                // Delete button
-                                IconButton(
-                                    onClick = {
-                                        deletingTaskList = taskList
-                                        showDeleteDialog = true
+                                // Edit button (hidden for "My Tasks")
+                                if (taskList.task_list_name != "My Tasks") {
+                                    IconButton(
+                                        onClick = {
+                                            editingTaskList = taskList
+                                            editTaskListName = taskList.task_list_name
+                                            showEditDialog = true
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit Task List",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
                                     }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete Task List",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
+                                }
+                                
+                                // Delete button (hidden for "My Tasks")
+                                if (taskList.task_list_name != "My Tasks") {
+                                    IconButton(
+                                        onClick = {
+                                            deletingTaskList = taskList
+                                            showDeleteDialog = true
+                                        }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Delete Task List",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
                                 }
                             }
                         }
