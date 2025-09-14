@@ -18,16 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.finalproject.R
 import com.example.finalproject.journey.data.QuizRepository
 import com.example.finalproject.journey.model.Quiz
 import com.example.finalproject.journey.viewmodel.QuizViewModel
 import com.example.finalproject.journey.viewmodel.QuizViewModelFactory
+import com.example.finalproject.core.DataStore.TokenManager
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -47,6 +50,12 @@ fun QuizListScreen(
     val quizzes by viewModel.quizzes
     val isLoading by viewModel.isLoading
     val errorMessage by viewModel.errorMessage
+    
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager.getInstance(context) }
+    
+    // Get user name from TokenManager (same as other screens)
+    val userName by tokenManager.userName.collectAsState(initial = "User")
     
     // Filter state
     var selectedFilter by remember { mutableStateOf(FilterPeriod.ALL) }
@@ -91,7 +100,7 @@ fun QuizListScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Avatar Section
+            // Avatar Section (synced with StudyScreen)
             Box(
                 modifier = Modifier
                     .size(80.dp)
@@ -99,19 +108,19 @@ fun QuizListScreen(
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
+                // Use the same avatar as StudyScreen
+                Image(
+                    painter = painterResource(id = R.drawable.study_mate_header),
                     contentDescription = "Avatar",
-                    modifier = Modifier.size(48.dp),
-                    tint = Color(0xFF7C4DFF)
+                    modifier = Modifier.size(64.dp)
                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // User Name
+            // User Name - use actual user name from TokenManager (same as other screens)
             Text(
-                text = "Endy",
+                text = userName ?: "User",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White

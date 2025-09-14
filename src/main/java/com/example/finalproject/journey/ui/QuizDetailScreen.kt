@@ -1,18 +1,28 @@
-package com.example.finalproject.journey.ui
+    package com.example.finalproject.journey.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.finalproject.R
 import com.example.finalproject.journey.model.Quiz
 import com.example.finalproject.journey.model.QuizQuestion
+import com.example.finalproject.core.DataStore.TokenManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,6 +30,12 @@ fun QuizDetailScreen(
     quiz: Quiz,
     onNavigateBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager.getInstance(context) }
+    
+    // Get user name from TokenManager (same as other screens)
+    val userName by tokenManager.userName.collectAsState(initial = "User")
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -40,6 +56,44 @@ fun QuizDetailScreen(
                 .padding(WindowInsets.statusBars.asPaddingValues())
                 .padding(horizontal = 24.dp),
         ) {
+            // User Profile Section (synced with StudyScreen and OverallStatsScreen)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Quiz Details",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = userName ?: "User",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                
+                // Avatar Section (same as StudyScreen)
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.study_mate_header),
+                        contentDescription = "Avatar",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+            
             // Quiz Information Section
             Card(
                 modifier = Modifier
