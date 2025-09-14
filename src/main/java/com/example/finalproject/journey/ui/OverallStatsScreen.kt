@@ -15,10 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.finalproject.R
 import com.example.finalproject.journey.model.Quiz
+import com.example.finalproject.core.DataStore.TokenManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +31,12 @@ fun OverallStatsScreen(
     onClose: () -> Unit,
     onSwitchToDetail: () -> Unit
 ) {
+    val context = LocalContext.current
+    val tokenManager = remember { TokenManager.getInstance(context) }
+    
+    // Get user name from TokenManager (same as other screens)
+    val userName by tokenManager.userName.collectAsState(initial = "User")
+
     Scaffold(
         topBar = {
             Box(
@@ -63,19 +73,19 @@ fun OverallStatsScreen(
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
+                // Use the same avatar as StudyScreen
+                Image(
+                    painter = painterResource(id = R.drawable.study_mate_header),
                     contentDescription = "Avatar",
-                    modifier = Modifier.size(48.dp),
-                    tint = Color(0xFF7C4DFF)
+                    modifier = Modifier.size(64.dp)
                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // User Name
+            // User Name - use actual user name from TokenManager (same as other screens)
             Text(
-                text = "Endy",
+                text = userName ?: "User",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
