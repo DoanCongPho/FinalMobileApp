@@ -45,6 +45,7 @@ sealed class Screen(val route: String) {
     object Month: Screen("month")
     object Pomodoro: Screen("pomodoro")
     object Review: Screen ("review")
+    object Flashcard: Screen("flashcard/{quizId}")
     object Quiz: Screen("quiz")
     object CreateQuizRoot : Screen("create_quiz")
     object CreateQuizChoose : Screen("create_quiz/choose")

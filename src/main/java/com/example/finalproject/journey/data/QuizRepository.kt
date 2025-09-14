@@ -14,4 +14,12 @@ class QuizRepository(private val api: QuizApi) {
             Response.success(emptyList())
         }
     }
+
+    suspend fun deleteQuiz(quizId: Int): Response<Unit> {
+        return try {
+            api.deleteQuiz(quizId)
+        } catch (e: Exception) {
+            Response.error(500, okhttp3.ResponseBody.create(null, "Failed to delete quiz"))
+        }
+    }
 }

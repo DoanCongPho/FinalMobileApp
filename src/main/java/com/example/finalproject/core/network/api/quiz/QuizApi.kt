@@ -12,6 +12,9 @@ interface QuizApi {
     @GET("users/me/quizzes")
     suspend fun getUserQuizzes(): Response<List<Quiz>>
 
+    @DELETE("quizzes/{quizId}")
+    suspend fun deleteQuiz(@Path("quizId") quizId: Int): Response<Unit>
+
     // Manual Quiz Creation - matches backend.json exactly
     @POST("users/me/quizzes")
     suspend fun createQuiz(@Body request: QuizCreateRequest): Response<Quiz>

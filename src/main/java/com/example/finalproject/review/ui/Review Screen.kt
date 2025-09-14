@@ -1,6 +1,8 @@
 package com.example.finalproject.review.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,11 +11,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,50 +25,133 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.finalproject.review.model.ReviewItem
-import com.example.finalproject.review.model.ReviewItemType
-import com.example.finalproject.review.viewmodel.ReviewUiState
-import com.example.finalproject.review.viewmodel.ReviewViewModel
-import com.example.finalproject.review.viewmodel.ReviewViewModelFactory
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.clickable
-import androidx.compose.runtime.remember
+import com.example.finalproject.journey.viewmodel.QuizViewModel
+import com.example.finalproject.journey.model.Quiz
 
+// Function to get a cute emoji based on quiz ID
+private fun getCuteEmojiForQuiz(quizId: Int): String {
+    val cuteEmojis = listOf(
+        "🐱", "🐶", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", 
+        "🦄", "🌈", "⭐", "🌟", "✨", "💫", "🎨", "📚",
+        "🍭", "🧸", "🎪", "🎭", "🎨", "🎯", "🎮", "🎲",
+        "🌸", "🌺", "🌻", "🌷", "🌹", "💐", "🦋", "🐝"
+    )
+    return cuteEmojis[quizId % cuteEmojis.size]
+}
 
+@Composable
+private fun QuizRow(quiz: Quiz, onClick: () -> Unit, onDelete: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // delete badge
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFF2748))
+                    .clickable(
+                        onClick = {
+                            onDelete()
+                        },
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("×", color = Color.White, fontWeight = FontWeight.Black)
+            }
+
+            Spacer(Modifier.width(10.dp))
+
+            // Quiz icon with cute emoji
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFE3F2FD)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = getCuteEmojiForQuiz(quiz.id),
+                    fontSize = 24.sp
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    quiz.title ?: "Untitled Quiz",
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "${quiz.questions.size} questions • Created ${quiz.createdAt}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF736DAA)
+                )
+            }
+
+            Icon(Icons.Filled.ArrowForwardIos, null, tint = Color(0xFFB0ACD6))
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewRoute(
     onBack: () -> Unit,
     onCreateQuiz: () -> Unit,
     onFindFriends: () -> Unit,
-    factory: ReviewViewModelFactory,
-    vm: ReviewViewModel = viewModel(factory = factory)
+    onShowQuiz: (Quiz) -> Unit,
+    quizViewModel: QuizViewModel
 ) {
-    val state by vm.ui.collectAsStateWithLifecycle()
+    val quizzes by quizViewModel.quizzes
+    val isQuizLoading by quizViewModel.isLoading
+    val errorMessage by quizViewModel.errorMessage
+    
+    // Load quizzes when screen opens
+    LaunchedEffect(Unit) {
+        quizViewModel.loadQuizzes()
+    }
+    
     ReviewScreen(
-        state = state,
+        quizzes = quizzes,
+        isQuizLoading = isQuizLoading,
+        errorMessage = errorMessage,
         onBack = onBack,
-        onRetry = vm::refresh,
+        onRetry = { quizViewModel.loadQuizzes() },
         onCreateQuiz = onCreateQuiz,
         onFindFriends = onFindFriends,
-        onOpenItem = { /* open */ },
-        onDelete = { id -> vm.removeItem(id) } // NEW
+        onShowQuiz = onShowQuiz,
+        onDeleteQuiz = { quizId -> quizViewModel.deleteQuiz(quizId) }
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewScreen(
-    state: ReviewUiState,
+    quizzes: List<Quiz>,
+    isQuizLoading: Boolean,
+    errorMessage: String?,
     onBack: () -> Unit,
     onRetry: () -> Unit,
     onCreateQuiz: () -> Unit,
     onFindFriends: () -> Unit,
-    onOpenItem: (ReviewItem) -> Unit,
-    onDelete: (String) -> Unit
+    onShowQuiz: (Quiz) -> Unit,
+    onDeleteQuiz: (Int) -> Unit
 ) {
     val featuredBg = Brush.linearGradient(
         listOf(Color(0xFF7E6BFF), Color(0xFF9D86FF), Color(0xFFBBA5FF))
@@ -86,7 +171,7 @@ fun ReviewScreen(
         }
     ) { inner ->
         when {
-            state.loading -> {
+            isQuizLoading && quizzes.isEmpty() -> {
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -94,7 +179,7 @@ fun ReviewScreen(
                     contentAlignment = Alignment.Center
                 ) { CircularProgressIndicator() }
             }
-            state.error != null -> {
+            errorMessage != null && quizzes.isEmpty() -> {
                 Column(
                     Modifier
                         .fillMaxSize()
@@ -103,7 +188,7 @@ fun ReviewScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(state.error, color = MaterialTheme.colorScheme.error)
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
                     Spacer(Modifier.height(12.dp))
                     Button(onClick = onRetry) { Text("Retry") }
                 }
@@ -134,30 +219,28 @@ fun ReviewScreen(
                         }
                     }
 
-                    state.recent?.let { recent ->
-                        item {
-                            Surface(shape = RoundedCornerShape(16.dp), color = Color.Transparent) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(cardBg)
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(
-                                            "RECENT QUIZ",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = Color(0xFF9A8CC6)
-                                        )
-                                        Spacer(Modifier.height(8.dp))
-                                        Text(
-                                            "🎧  ${recent.title}",
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                    PercentageBadge(recent.progressPercent)
+                    // Recent Quiz section - simplified without fake data
+                    item {
+                        Surface(shape = RoundedCornerShape(16.dp), color = Color.Transparent) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(cardBg)
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        "YOUR PROGRESS",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color(0xFF9A8CC6)
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        "📚 ${quizzes.size} Quizzes Created",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                             }
                         }
@@ -204,13 +287,65 @@ fun ReviewScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Available", style = MaterialTheme.typography.titleMedium)
-                            TextButton(onClick = { /* show all */ }) { Text("See all") }
+                            Text("Your Quizzes", style = MaterialTheme.typography.titleMedium)
                         }
                     }
-
-                    items(state.items, key = { it.id }) { item ->
-                        ReviewRow(item = item, onClick = { onOpenItem(item) }, onDelete = {onDelete(item.id)})
+                    
+                    // Show quizzes
+                    if (isQuizLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = Color(0xFF5B53D6),
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+                    } else if (errorMessage != null) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        "Error loading quizzes",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = Color(0xFFD32F2F)
+                                    )
+                                    Text(
+                                        errorMessage,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF666666),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                    Button(
+                                        onClick = onRetry,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    ) {
+                                        Text("Retry")
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        items(quizzes, key = { it.id }) { quiz ->
+                            QuizRow(
+                                quiz = quiz,
+                                onClick = { onShowQuiz(quiz) },
+                                onDelete = { onDeleteQuiz(quiz.id) }
+                            )
+                        }
                     }
                 }
             }
@@ -231,59 +366,3 @@ private fun PercentageBadge(percent: Int) {
     }
 }
 
-@Composable
-private fun ReviewRow(item: ReviewItem, onClick: () -> Unit, onDelete: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // delete badge
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFFF2748))
-                    .clickable(
-                        onClick = onDelete,
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("×", color = Color.White, fontWeight = FontWeight.Black)
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            val icon = when (item.type) {
-                ReviewItemType.Quiz -> Icons.Filled.BarChart
-                ReviewItemType.Document -> Icons.Filled.Calculate
-            }
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF0ECFF)),
-                contentAlignment = Alignment.Center
-            ) { Icon(icon, null, tint = Color(0xFF5B53D6)) }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(Modifier.weight(1f)) {
-                Text(item.title, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(2.dp))
-                Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = Color(0xFF736DAA))
-            }
-
-            Icon(Icons.Filled.ArrowForwardIos, null, tint = Color(0xFFB0ACD6))
-        }
-    }
-}

@@ -28,14 +28,13 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
             try {
                 val response = repository.getUserQuizzes()
                 if (response.isSuccessful) {
-                    _quizzes.value = response.body() ?: emptyList()
+                    val quizzes = response.body() ?: emptyList()
+                    _quizzes.value = quizzes
                 } else {
                     _errorMessage.value = "Failed to load quizzes: ${response.message()}"
-                    _quizzes.value = emptyList()
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error: ${e.message}"
-                _quizzes.value = emptyList()
+                _errorMessage.value = "Error loading quizzes: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -48,6 +47,27 @@ class QuizViewModel(private val repository: QuizRepository) : ViewModel() {
 
     fun getQuizById(quizId: Int): Quiz? {
         return _quizzes.value.find { it.id == quizId }
+    }
+
+    fun deleteQuiz(quizId: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+            
+            try {
+                val response = repository.deleteQuiz(quizId)
+                if (response.isSuccessful) {
+                    // Remove quiz from local list
+                    _quizzes.value = _quizzes.value.filter { it.id != quizId }
+                } else {
+                    _errorMessage.value = "Failed to delete quiz: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error deleting quiz: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }
 

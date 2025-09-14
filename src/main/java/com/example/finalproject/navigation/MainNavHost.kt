@@ -387,15 +387,41 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
         }
 
         composable(Screen.Review.route) {
-            // supply your DI repo here; replace FakeReviewRepository with real one when ready
-            val factory = com.example.finalproject.review.viewmodel.ReviewViewModelFactory(
-                repo = com.example.finalproject.review.data.FakeReviewRepository()
-            )
+            
+            // Create QuizViewModel - store it in a remember to persist across recompositions
+            val quizRepository = remember { com.example.finalproject.journey.data.QuizRepository(apiHolder.quizApi) }
+            val quizViewModel: com.example.finalproject.journey.viewmodel.QuizViewModel = 
+                viewModel(factory = com.example.finalproject.journey.viewmodel.QuizViewModelFactory(quizRepository))
+            
             com.example.finalproject.review.ui.ReviewRoute(
                 onBack = { navController.popBackStack() },
                 onCreateQuiz = { navController.navigate(Screen.CreateQuizRoot.route) },
                 onFindFriends = { /* nav to friends */ },
-                factory = factory
+                onShowQuiz = { quiz -> 
+                    // Store quiz in the navigation holder
+                    com.example.finalproject.review.ui.QuizNavigationHolder.selectedQuiz = quiz
+                    navController.navigate("flashcard/${quiz.id}")
+                },
+                quizViewModel = quizViewModel
+            )
+        }
+        
+        composable(
+            route = Screen.Flashcard.route,
+            arguments = listOf(navArgument("quizId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val quizId = backStackEntry.arguments?.getInt("quizId") ?: 0
+            
+            // Get quiz from the navigation holder
+            val selectedQuiz = com.example.finalproject.review.ui.QuizNavigationHolder.selectedQuiz
+            
+            com.example.finalproject.review.ui.FlashcardScreen(
+                quiz = selectedQuiz,
+                onBack = { 
+                    // Clear the selected quiz when navigating back
+                    com.example.finalproject.review.ui.QuizNavigationHolder.selectedQuiz = null
+                    navController.popBackStack() 
+                }
             )
         }
 
