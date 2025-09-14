@@ -17,10 +17,12 @@ import com.example.finalproject.journey.model.Quiz
 
 data class ManualUiState(
     val items: List<ManualQuestion> = emptyList(),
+    val title: String = "",
     val draftQuestion: String = "",
     val draftAnswer: String = "",
     val canSubmit: Boolean = false,
     val showEmptyError: Boolean = false,
+    val showTitleError: Boolean = false,
     val isSubmitting: Boolean = false,
     val error: String? = null,
     val createdQuizId: Int? = null
@@ -36,6 +38,16 @@ class ManualQuizViewModel(
 
     private val _state = MutableStateFlow(ManualUiState())
     val state: StateFlow<ManualUiState> = _state
+
+    fun onTitleChange(text: String) {
+        _state.update { 
+            it.copy(
+                title = text, 
+                showTitleError = false, 
+                canSubmit = canSubmitInternal(it.copy(title = text))
+            ) 
+        }
+    }
 
     fun onQuestionChange(text: String) {
         _state.update { it.copy(draftQuestion = text, showEmptyError = false, canSubmit = canSubmitInternal(it.copy(draftQuestion = text))) }
@@ -70,15 +82,21 @@ class ManualQuizViewModel(
     }
 
     private fun canSubmitInternal(s: ManualUiState): Boolean {
-        return s.items.isNotEmpty()
+        return s.items.isNotEmpty() && s.title.isNotBlank()
     }
 
     fun currentFlashcards(): List<ManualQuestion> = _state.value.items
     
     // Real API implementation
-    fun submitQuiz(title: String? = null, onSuccess: (Int) -> Unit) {
+    fun submitQuiz(onSuccess: (Int) -> Unit) {
         val s = _state.value
         if (!s.canSubmit) return
+        
+        // Check if title is provided
+        if (s.title.isBlank()) {
+            _state.update { it.copy(showTitleError = true) }
+            return
+        }
         
         viewModelScope.launch {
             _state.update { it.copy(isSubmitting = true, error = null) }
@@ -108,7 +126,7 @@ class ManualQuizViewModel(
                 
                 // Create the quiz request
                 val request = QuizCreateRequest(
-                    title = title ?: "Manual Quiz",
+                    title = s.title.trim(),
                     questions = questions
                 )
                 

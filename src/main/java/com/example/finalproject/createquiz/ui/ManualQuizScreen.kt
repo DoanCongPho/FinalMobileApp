@@ -43,6 +43,23 @@ fun ManualQuizScreen(
             // Input area
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
+                    value = state.title,
+                    onValueChange = viewModel::onTitleChange,
+                    label = { Text("Quiz Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    placeholder = { Text("Enter a title for your quiz") }
+                )
+                
+                if (state.showTitleError) {
+                    Text(
+                        "Please enter a quiz title.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                
+                OutlinedTextField(
                     value = state.draftQuestion,
                     onValueChange = viewModel::onQuestionChange,
                     label = { Text("Question") },
@@ -93,6 +110,21 @@ fun ManualQuizScreen(
                         items = state.items,
                         onDelete = { viewModel.removeFlashcard(it) }
                     )
+                }
+
+                // Show validation message
+                if (!state.canSubmit) {
+                    val missingItems = mutableListOf<String>()
+                    if (state.title.isBlank()) missingItems.add("quiz title")
+                    if (state.items.isEmpty()) missingItems.add("at least one flashcard")
+                    
+                    if (missingItems.isNotEmpty()) {
+                        Text(
+                            "Please provide: ${missingItems.joinToString(", ")}",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
 
                 Button(

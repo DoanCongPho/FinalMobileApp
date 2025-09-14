@@ -117,7 +117,7 @@ fun SuccessScreen(
                 }
                 Spacer(Modifier.height(12.dp))
             }
-            
+
             Spacer(Modifier.height(15.dp))
             Button(
                 onClick = onBackToMenu,

@@ -479,8 +479,8 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                 com.example.finalproject.createquiz.ui.ManualQuizScreen(
                     viewModel = vm,
                     onFinish = {
-                        // Call the real API instead of hardcoded navigation
-                        vm.submitQuiz(title = "Manual Quiz") { realQuizId ->
+                        // Call the updated API with user-provided title
+                        vm.submitQuiz { realQuizId ->
                             navController.navigate("create_quiz/success?quizId=$realQuizId") {
                                 popUpTo(Screen.CreateQuizRoot.route) { inclusive = false }
                                 launchSingleTop = true
