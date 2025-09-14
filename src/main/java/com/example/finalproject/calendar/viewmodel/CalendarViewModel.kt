@@ -80,36 +80,64 @@ class CalendarViewModel1(): ViewModel() {
 
     init {
         viewModelScope.launch {
-            CalendarRepository1.loadTasksFromApi()
+            //CalendarRepository1.loadTasksFromApi()
         }
     }
 
     fun loadTasks() {
         viewModelScope.launch {
-            CalendarRepository1.loadTasksFromApi()
             CalendarRepository1.loadTaskListsFromApi()
+            CalendarRepository1.loadTasksFromApi()
+        }
+    }
+    
+    // Load tasks for a specific task list
+    fun loadTasksForTaskList(taskListId: Int) {
+        viewModelScope.launch {
+            CalendarRepository1.loadTasksFromApi(taskListId)
         }
     }
 
     fun addTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
         CalendarRepository1.addTask(task)
     }
+    
+    // API-based task creation
+    suspend fun createTask(task: com.example.finalproject.Tasks.model.CalendarTask, hasRfc3339SeriesId: Boolean = false): Boolean {
+        return CalendarRepository1.createTaskApi(task, hasRfc3339SeriesId)
+    }
 
     fun deleteTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
         CalendarRepository1.deleteTask(task)
+    }
+    
+    // API-based task deletion  
+    suspend fun deleteTaskApi(task: com.example.finalproject.Tasks.model.CalendarTask): Boolean {
+        return CalendarRepository1.deleteTaskApi(task)
+    }
+    
+    // Delete all tasks from all task lists
+    suspend fun deleteAllTasks(): Boolean {
+        return CalendarRepository1.deleteAllTasks()
     }
 
     fun updateTask(task: com.example.finalproject.Tasks.model.CalendarTask) {
         CalendarRepository1.updateTask(task)
     }
+    
+    // API-based task update
+    suspend fun updateTaskApi(task: com.example.finalproject.Tasks.model.CalendarTask): Boolean {
+        return CalendarRepository1.updateTaskApi(task)
+    }
 
     fun toggleTaskState(task: com.example.finalproject.Tasks.model.CalendarTask) {
-        val updatedTask = task.copy(state = if (task.state == 0) 1 else 0)
-        CalendarRepository1.updateTask(updatedTask)
+        viewModelScope.launch {
+            CalendarRepository1.toggleTaskStateApi(task)
+        }
     }
     
     // Task series management methods
-    fun createTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
+    suspend fun createTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
         CalendarRepository1.createTaskSeries(rootTask)
     }
     
@@ -117,7 +145,7 @@ class CalendarViewModel1(): ViewModel() {
         CalendarRepository1.deleteTaskSeries(seriesId)
     }
     
-    fun updateTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
+    suspend fun updateTaskSeries(rootTask: com.example.finalproject.Tasks.model.CalendarTask) {
         CalendarRepository1.updateTaskSeries(rootTask)
     }
     

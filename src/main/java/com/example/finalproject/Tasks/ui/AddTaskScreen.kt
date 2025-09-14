@@ -26,6 +26,7 @@ import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.model.RepeatEnd
 import com.example.finalproject.Tasks.ui.getDrawableId
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -183,28 +184,38 @@ fun AddTaskScreen(
                             repeatEnd = draftTask?.repeatEnd ?: com.example.finalproject.Tasks.model.RepeatEnd.Never,
                             monthlyPattern = draftTask?.monthlyPattern,
                             tag = tag,
-                            task_list_id = selectedTaskListId
+                            task_list_id = selectedTaskListId,
+                            seriesId = if (repeat != RepeatFrequency.NONE) {
+                                // Generate RFC 3339 series ID for recurring tasks
+                                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                            } else {
+                                null
+                            }
                         )
 
                         
-                        // Add root task manually with calendarViewModel.addTask()
-                        calendarViewModel.addTask(finalTask)
-                        
-                        // If repeatFrequency != NONE, call createTaskSeries(rootTask)
-                        if (repeat != RepeatFrequency.NONE) {
-                            // Generate series ID for the root task
-                            val seriesId = java.util.UUID.randomUUID().toString()
-                            val rootTaskWithSeries = finalTask.copy(seriesId = seriesId)
+                        // Use API-based task creation instead of just adding locally
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                            // Ensure series ID is current by regenerating it right before API call
+                            val finalTaskWithCurrentSeriesId = if (repeat != RepeatFrequency.NONE) {
+                                finalTask.copy(
+                                    seriesId = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                                )
+                            } else {
+                                finalTask.copy(seriesId = null)
+                            }
                             
-                            // Update the root task with series ID
-                            calendarViewModel.updateTask(rootTaskWithSeries)
+                            val success = calendarViewModel.createTask(finalTaskWithCurrentSeriesId, hasRfc3339SeriesId = (repeat != RepeatFrequency.NONE))
                             
-                            // Create the task series
-                            calendarViewModel.createTaskSeries(rootTaskWithSeries)
+                            // If repeatFrequency != NONE, call createTaskSeries(rootTask)
+                            if (repeat != RepeatFrequency.NONE) {
+                                    calendarViewModel.createTaskSeries(finalTaskWithCurrentSeriesId)
+                                }
+
+                            
+                            calendarViewModel.clearDraftTask() // Clear draft after saving
+                            onSave(finalTaskWithCurrentSeriesId)
                         }
-                        
-                        calendarViewModel.clearDraftTask() // Clear draft after saving
-                        onSave(finalTask)
                     }
                 }
             )

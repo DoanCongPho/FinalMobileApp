@@ -68,9 +68,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
     val tokenManager = TokenManager.getInstance(context)
     val apiHolder = ApiClient.create(tokenManager)
 
-    // Initialize TaskListApi in the repository
+    // Initialize TaskListApi and TaskApi in the repository
     LaunchedEffect(Unit) {
         com.example.finalproject.calendar.data.CalendarRepository1.setTaskListApi(apiHolder.taskListApi)
+        com.example.finalproject.calendar.data.CalendarRepository1.setTaskApi(apiHolder.taskApi)
         calendarViewModel.loadTasks()
     }
 
@@ -92,6 +93,10 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
         modifier = modifier
     ) {
         composable(Screen.Month.route) {
+             //Delete all faulty tasks when navigating to MonthScreen
+//            LaunchedEffect(Unit) {
+//                calendarViewModel.deleteAllTasks()
+//            }
             MonthScreen(viewModel = calendarViewModel, navController = navController)
         }
 
@@ -281,7 +286,9 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                         navController.navigate("edit_task/${taskToEdit.id}")
                     },
                     onDelete = { deletedTask ->
-                        calendarViewModel.deleteTask(deletedTask)
+                        CoroutineScope(Dispatchers.Main).launch {
+                            calendarViewModel.deleteTaskApi(deletedTask)
+                        }
                         navController.popBackStack()
                     },
                     onToggleState = { toggledTask ->
