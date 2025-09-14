@@ -499,10 +499,18 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier,
                     defaultValue = ""
                 })
             ) {
+                val quizId = it.arguments?.getString("quizId") ?: ""
+                // Create QuizViewModel for accessing quiz data
+                val quizRepository = remember { com.example.finalproject.journey.data.QuizRepository(apiHolder.quizApi) }
+                val quizViewModel: com.example.finalproject.journey.viewmodel.QuizViewModel = 
+                    viewModel(factory = com.example.finalproject.journey.viewmodel.QuizViewModelFactory(quizRepository))
+                
                 com.example.finalproject.createquiz.ui.SuccessScreen(
                     nav = navController,
                     onGetThere = { navController.navigate(Screen.Study.route) },
-                    onBackToMenu = { navController.popBackStack() }
+                    onBackToMenu = { navController.popBackStack() },
+                    quizId = quizId,
+                    quizViewModel = quizViewModel
                 )
             }
         }
