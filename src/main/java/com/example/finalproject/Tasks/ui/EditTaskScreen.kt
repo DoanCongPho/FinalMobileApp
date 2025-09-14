@@ -27,6 +27,7 @@ import com.example.finalproject.Tasks.model.CalendarTask
 import com.example.finalproject.Tasks.model.RepeatFrequency
 import com.example.finalproject.Tasks.model.RepeatEnd
 import com.example.finalproject.Tasks.ui.getDrawableId
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -182,58 +183,76 @@ fun EditTaskScreen(
                             task_list_id = selectedTaskListId
                         )
                         
-                        // Check if repeat pattern changed
-                        val originalRepeatFrequency = task.repeatFrequency
-                        val originalRepeatEnd = task.repeatEnd
-                        val originalMonthlyPattern = task.monthlyPattern
-                        val newRepeatFrequency = repeat
-                        val newRepeatEnd = draftTask?.repeatEnd ?: task.repeatEnd
-                        val newMonthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern
-                        
-                        if (originalRepeatFrequency == newRepeatFrequency && 
-                            originalRepeatEnd == newRepeatEnd &&
-                            originalMonthlyPattern == newMonthlyPattern &&
-                            newRepeatFrequency != RepeatFrequency.NONE) {
-                            // No repeat pattern changes: Use updateTaskSeries() to update all tasks in series
-                            calendarViewModel.updateTaskSeries(editedTask)
-                        } else if (originalRepeatFrequency != newRepeatFrequency ||
-                                   originalRepeatEnd != newRepeatEnd ||
-                                   originalMonthlyPattern != newMonthlyPattern) {
-                            // Repeat pattern changes (frequency, end condition, or monthly pattern):
+                        // Use coroutine scope for API calls
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                            // Check if repeat pattern changed
+                            val originalRepeatFrequency = task.repeatFrequency
+                            val originalRepeatEnd = task.repeatEnd
+                            val originalMonthlyPattern = task.monthlyPattern
+                            val newRepeatFrequency = repeat
+                            val newRepeatEnd = draftTask?.repeatEnd ?: task.repeatEnd
+                            val newMonthlyPattern = draftTask?.monthlyPattern ?: task.monthlyPattern
                             
-                            // Save copy of  original task before any modifications
-                            val originalTaskCopy = task.copy()
-                            
-                            // 1. Delete old series if it existed
-                            task.seriesId?.let { oldSeriesId ->
-                                calendarViewModel.deleteTaskSeries(oldSeriesId)
-                            }
-                            
-                            // 2. Remove the original task from repository
-                            calendarViewModel.deleteTask(originalTaskCopy)
-                            
-                            // 3. Add new root task manually
-                            val newRootTask = if (newRepeatFrequency != RepeatFrequency.NONE) {
-                                // Generate new series ID if it will have repeats
-                                editedTask.copy(seriesId = java.util.UUID.randomUUID().toString())
+                            if (originalRepeatFrequency == newRepeatFrequency && 
+                                originalRepeatEnd == newRepeatEnd &&
+                                originalMonthlyPattern == newMonthlyPattern &&
+                                newRepeatFrequency != RepeatFrequency.NONE) {
+                                // No repeat pattern changes: Use updateTaskApi() and updateTaskSeries() to update all tasks in series
+                                val success = calendarViewModel.updateTaskApi(editedTask)
+                                if (success) {
+                                    calendarViewModel.updateTaskSeries(editedTask)
+                                }
+                            } else if (originalRepeatFrequency != newRepeatFrequency ||
+                                       originalRepeatEnd != newRepeatEnd ||
+                                       originalMonthlyPattern != newMonthlyPattern) {
+                                // Repeat pattern changes (frequency, end condition, or monthly pattern):
+                                
+                                // Save copy of  original task before any modifications
+                                val originalTaskCopy = task.copy()
+                                
+                                // 1. Delete all tasks in old series if it existed (API + local)
+                                task.seriesId?.let { oldSeriesId ->
+                                    // Find all tasks in the series and delete each one via API
+                                    val tasksInSeries = calendarViewModel.tasks.filter { it.seriesId == oldSeriesId }
+                                    tasksInSeries.forEach { taskInSeries ->
+                                        calendarViewModel.deleteTaskApi(taskInSeries)
+                                    }
+                                }
+                                
+                                // 2. Remove the original task from repository + server (API + local)
+                                // We always need to delete the original task since we're recreating it with new pattern
+                                // calendarViewModel.deleteTaskApi(originalTaskCopy)
+                                
+                                // 3. Create new root task with API
+                                val newRootTask = if (newRepeatFrequency != RepeatFrequency.NONE) {
+                                    // Generate new series ID using RFC 3339 format for recurring tasks
+                                    val rfc3339SeriesId = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+                                    editedTask.copy(seriesId = rfc3339SeriesId)
+                                } else {
+                                    // Remove series ID if no longer repeating
+                                    editedTask.copy(seriesId = null)
+                                }
+                                
+                                android.util.Log.d("EditTaskScreen", "About to call createTask for newRootTask: ${newRootTask.title} with seriesId: ${newRootTask.seriesId}")
+                                val createSuccess = calendarViewModel.createTask(newRootTask, hasRfc3339SeriesId = (newRepeatFrequency != RepeatFrequency.NONE))
+                                android.util.Log.d("EditTaskScreen", "createTask result: $createSuccess")
+                                
+                                // 4. Call createTaskSeries(newRootTask) if new pattern exists
+                                if (createSuccess && newRepeatFrequency != RepeatFrequency.NONE) {
+                                        android.util.Log.d("EditTaskScreen", "About to call createTaskSeries for newRootTask: ${newRootTask.title}")
+                                        calendarViewModel.createTaskSeries(newRootTask)
+                                        android.util.Log.d("EditTaskScreen", "createTaskSeries completed for newRootTask: ${newRootTask.title}")
+                                }
                             } else {
-                                // Remove series ID if no longer repeating
-                                editedTask.copy(seriesId = null)
+                                // Simple update for non-repeating tasks (use API)
+                                android.util.Log.d("EditTaskScreen", "About to call updateTaskApi for editedTask: ${editedTask.title}")
+                                calendarViewModel.updateTaskApi(editedTask)
+                                android.util.Log.d("EditTaskScreen", "updateTaskApi completed for editedTask: ${editedTask.title}")
                             }
                             
-                            calendarViewModel.addTask(newRootTask)
-                            
-                            // 4. Call createTaskSeries(newRootTask) if new pattern exists
-                            if (newRepeatFrequency != RepeatFrequency.NONE) {
-                                calendarViewModel.createTaskSeries(newRootTask)
-                            }
-                        } else {
-                            // Simple update for non-repeating tasks
-                            calendarViewModel.updateTask(editedTask)
+                            calendarViewModel.clearDraftTask() // Clear draft after saving
+                            onSave(editedTask)
                         }
-                        
-                        calendarViewModel.clearDraftTask() // Clear draft after saving
-                        onSave(editedTask)
                     }
                 }
             )
