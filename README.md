@@ -229,9 +229,14 @@ All endpoints require Bearer token authentication, handled automatically by the 
 
 This project is part of an academic assignment for Mobile Application Development coursework.
 
-## 👥 Authors
+## 👥 Team Members
 
-- **DoanCongPho** - *Initial work* - [GitHub](https://github.com/DoanCongPho)
+This project was developed collaboratively by:
+
+- **Le Tan Nguyen Dat** - *Project Development*
+- **Doan Cong Pho** - *Project Development* - [GitHub](https://github.com/DoanCongPho)
+- **Nguyen Duc Thinh** - *Project Development*
+- **Vay Thuong Gia Lac** - *Project Development*
 
 ## 📧 Support
 
@@ -239,4 +244,4 @@ For support and questions, please open an issue in the GitHub repository.
 
 ---
 
-**Note**: This is a student project developed as part of the Mobile Application Development curriculum. It demonstrates modern Android development practices and comprehensive app functionality.
+**Note**: This is a group project developed as part of the Mobile Application Development curriculum. It demonstrates modern Android development practices, collaborative software development, and comprehensive app functionality.
